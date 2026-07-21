@@ -328,8 +328,9 @@ const categoryCount = getCategories(posts).length;
     }
 
     .home-kicker {
-      max-width: calc(100% - 5.75rem);
+      max-width: 100%;
       margin-bottom: 0.85rem;
+      white-space: nowrap;
     }
 
     .home-hero h1 span { font-size: clamp(4rem, 21vw, 5.5rem); }
@@ -338,30 +339,28 @@ const categoryCount = getCategories(posts).length;
       font-size: clamp(1.6rem, 7.8vw, 2.25rem);
     }
 
-    .home-portrait {
+    .home-hero::after {
       position: absolute;
-      z-index: 2;
-      top: 3.25rem;
-      right: 0.75rem;
-      margin: 0;
-      opacity: 1;
+      z-index: 0;
+      top: 4.85rem;
+      left: 50%;
+      width: clamp(10.5rem, 52vw, 13.5rem);
+      aspect-ratio: 1;
+      border: 0.35rem solid color-mix(in srgb, var(--page-bg) 82%, transparent);
+      border-radius: 50%;
+      content: "";
+      background: url('/images/logo.jpg') center / cover no-repeat;
+      box-shadow:
+        -1.25rem -1.25rem 3.5rem color-mix(in srgb, var(--accent) 14%, transparent),
+        1.25rem 1.25rem 3.5rem color-mix(in srgb, var(--accent-warm) 10%, transparent);
+      opacity: 0.16;
+      pointer-events: none;
+      transform: translateX(-20%);
     }
 
-    .home-portrait::before {
-      inset: -24%;
-      opacity: 0.55;
-    }
-
-    .home-portrait a { width: 4.6rem; }
-
-    .home-portrait img {
-      border-width: 0.25rem;
-      box-shadow: 0 0.8rem 2rem rgb(0 0 0 / 10%);
-    }
-
-    .home-portrait span { display: none; }
+    .home-portrait { display: none; }
     .home-hero__copy { position: relative; z-index: 1; }
-    .home-stats { grid-column: auto; }
+    .home-stats { position: relative; z-index: 1; grid-column: auto; }
     .home-stats div { padding-inline: 0.55rem; display: block; }
     .home-stats dd { margin-top: 0.25rem; font-size: 1.35rem; }
     .latest-writing { padding-top: 3.5rem; }
