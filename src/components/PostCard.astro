@@ -1,0 +1,333 @@
+---
+import Icon from './Icon.astro';
+import { formatDate, getPostSlug, getPostUrl, getTaxonomyLabel, getTaxonomyUrl, toDate } from '../lib/content';
+
+type PostData = {
+  title: string;
+  slug?: string;
+  description?: string;
+  summary?: string;
+  date?: Date | string;
+  tags?: string[];
+  categories?: string[];
+  resources?: Array<Record<string, unknown>>;
+};
+
+type PostLike = (PostData | { data: PostData }) & {
+  id?: string;
+  slug?: string;
+  href?: string;
+  url?: string;
+};
+
+export interface Props {
+  post: PostLike;
+  variant?: 'summary' | 'archive';
+  index?: number;
+}
+
+const { post, variant = 'archive', index } = Astro.props;
+const data: PostData = (post as { data?: PostData }).data ?? (post as PostData);
+const slug = data.slug ?? post.slug ?? post.id ?? '';
+const href = post.href ?? post.url ?? getPostUrl(slug);
+const description = data.summary ?? data.description;
+const date = data.date ? toDate(data.date) : undefined;
+const dateText = date && !Number.isNaN(date.valueOf()) ? formatDate(date, 'short') : undefined;
+const shortDate = dateText?.slice(5);
+const isoDate = date && !Number.isNaN(date.valueOf()) ? date.toISOString() : undefined;
+const categories = data.categories ?? [];
+const tags = data.tags ?? [];
+const featured = data.resources?.find((resource) => resource.name === 'featured-image');
+const featuredSrc = typeof featured?.src === 'string' ? featured.src : undefined;
+const imageModules = import.meta.glob('../content/posts/**/*.{png,jpg,jpeg,webp,gif}', { eager: true });
+const imageKey = featuredSrc ? `../content/posts/${getPostSlug(slug)}/${featuredSrc}` : undefined;
+const imageModule = imageKey ? imageModules[imageKey] as { default?: { src?: string; width?: number; height?: number } } | undefined : undefined;
+const image = imageModule?.default;
+---
+
+{variant === 'summary' ? (
+  <article class:list={['post-summary', { 'has-image': image?.src }]}>
+    <div class="post-summary__copy">
+      <div class="post-summary__topline">
+        <span>{index ? String(index).padStart(2, '0') : 'NEW'}</span>
+        {dateText && <time datetime={isoDate}>{dateText}</time>}
+      </div>
+      <h2><a href={href}>{data.title}</a></h2>
+      <div class="post-summary__meta">
+        {categories[0] && (
+          <a href={getTaxonomyUrl('categories', categories[0])}>
+            <Icon name="folder" size={13} /> {getTaxonomyLabel('categories', categories[0])}
+          </a>
+        )}
+        <span>BY ZU1K</span>
+      </div>
+      {description && <p>{description}</p>}
+      <footer>
+        <a class="read-more" href={href}>阅读全文 <Icon name="arrow" size={15} /></a>
+        {tags.length > 0 && (
+          <div class="post-summary__tags" aria-label="标签">
+            {tags.slice(0, 3).map((tag) => <a href={getTaxonomyUrl('tags', tag)}>#{getTaxonomyLabel('tags', tag)}</a>)}
+          </div>
+        )}
+      </footer>
+    </div>
+    {image?.src && (
+      <a class="post-summary__image" href={href} tabindex="-1" aria-hidden="true">
+        <img src={image.src} width={image.width} height={image.height} alt="" loading="lazy" />
+      </a>
+    )}
+  </article>
+) : (
+  <article class="archive-entry">
+    <span class="archive-entry__index" data-no-select>{String(index ?? 0).padStart(2, '0')}</span>
+    {shortDate && <time datetime={isoDate}>{shortDate}</time>}
+    <a href={href}>{data.title}</a>
+    <span class="archive-entry__arrow" aria-hidden="true">↗</span>
+  </article>
+)}
+
+<style>
+  .post-summary {
+    min-height: 20rem;
+    padding: clamp(1.2rem, 3vw, 2rem) 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(1.5rem, 4vw, 3rem);
+    border-top: 1px solid var(--border-strong);
+  }
+
+  .post-summary.has-image {
+    grid-template-columns: minmax(0, 1.25fr) minmax(14rem, 0.75fr);
+  }
+
+  .post-summary__copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .post-summary__topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+  }
+
+  .post-summary__topline > span {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .post-summary h2 {
+    max-width: 20ch;
+    margin: 1rem 0 0.55rem;
+    font-size: clamp(1.55rem, 3.2vw, 2.55rem);
+    letter-spacing: -0.035em;
+    line-height: 1.12;
+  }
+
+  .post-summary h2 a {
+    color: var(--text);
+  }
+
+  .post-summary h2 a:hover {
+    color: var(--accent);
+  }
+
+  .post-summary__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: 0.56rem;
+    letter-spacing: 0.04em;
+  }
+
+  .post-summary__meta a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    color: var(--secondary);
+  }
+
+  .post-summary__meta > * + *::before {
+    margin-right: 0.6rem;
+    content: "/";
+    color: var(--border-strong);
+  }
+
+  .post-summary > .post-summary__copy > p {
+    max-width: 44rem;
+    margin: 1.2rem 0 0;
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--secondary);
+    font-size: 0.88rem;
+    line-height: 1.72;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  .post-summary footer {
+    margin-top: auto;
+    padding-top: 1.2rem;
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .read-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--text);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .read-more:hover {
+    color: var(--accent);
+  }
+
+  .post-summary__tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: end;
+    gap: 0.45rem;
+  }
+
+  .post-summary__tags a {
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: 0.55rem;
+  }
+
+  .post-summary__tags a:hover {
+    color: var(--accent-warm);
+  }
+
+  .post-summary__image {
+    position: relative;
+    min-height: 15rem;
+    display: block;
+    overflow: hidden;
+    border-radius: 0.45rem;
+    background: var(--surface-soft);
+  }
+
+  .post-summary__image::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .post-summary__image img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    filter: saturate(0.82);
+    transition: filter 0.35s ease, transform 0.5s ease;
+  }
+
+  .post-summary__image:hover img {
+    filter: saturate(1);
+    transform: scale(1.025);
+  }
+
+  .archive-entry {
+    min-width: 0;
+    min-height: 3.15rem;
+    padding: 0.62rem 0.25rem;
+    display: grid;
+    grid-template-columns: 2rem 3rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.18s ease, padding-inline 0.18s ease;
+  }
+
+  .archive-entry:hover {
+    padding-inline: 0.6rem;
+    background: var(--surface-soft);
+  }
+
+  .archive-entry__index,
+  .archive-entry time {
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: 0.58rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .archive-entry__index {
+    color: var(--accent);
+  }
+
+  .archive-entry a {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text);
+    font-size: 0.88rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .archive-entry:hover a {
+    color: var(--accent);
+  }
+
+  .archive-entry__arrow {
+    color: var(--accent);
+    font-family: var(--font-code);
+    font-size: 0.68rem;
+    opacity: 0;
+    transform: translateX(-0.25rem);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+
+  .archive-entry:hover .archive-entry__arrow {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  @media (max-width: 48rem) {
+    .post-summary,
+    .post-summary.has-image {
+      min-height: auto;
+      grid-template-columns: 1fr;
+    }
+
+    .post-summary__image {
+      min-height: 12rem;
+      grid-row: 1;
+    }
+
+    .post-summary footer {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .post-summary__tags {
+      justify-content: start;
+    }
+
+    .archive-entry {
+      grid-template-columns: 2.4rem minmax(0, 1fr) auto;
+      gap: 0.55rem;
+    }
+
+    .archive-entry__index {
+      display: none;
+    }
+  }
+</style>

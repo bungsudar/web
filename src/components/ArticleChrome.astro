@@ -1,0 +1,194 @@
+---
+import TableOfContents, { type TocHeading } from './TableOfContents.astro';
+import Icon from './Icon.astro';
+import { formatDate, getTaxonomyLabel, getTaxonomyUrl, toDate } from '../lib/content';
+
+export interface Props {
+  title: string;
+  description?: string;
+  date?: Date | string;
+  updated?: Date | string;
+  readingTime?: number | string;
+  wordCount?: number;
+  categories?: string[];
+  tags?: string[];
+  headings?: TocHeading[];
+  toc?: boolean;
+}
+
+const {
+  title,
+  description,
+  date,
+  updated,
+  readingTime,
+  wordCount,
+  categories = [],
+  tags = [],
+  headings = [],
+  toc = true,
+} = Astro.props;
+
+const validDate = date ? toDate(date) : undefined;
+const validUpdated = updated ? toDate(updated) : undefined;
+const dateText = validDate && !Number.isNaN(validDate.valueOf()) ? formatDate(validDate, 'short') : undefined;
+const updatedText = validUpdated && !Number.isNaN(validUpdated.valueOf()) ? formatDate(validUpdated, 'short') : undefined;
+const readText = typeof readingTime === 'number' ? `阅读 ${Math.max(1, Math.round(readingTime))} 分钟` : readingTime;
+const showToc = toc && headings.some((heading) => heading.depth === 2 || heading.depth === 3);
+---
+
+<article class="article">
+  <header class="article-header">
+    <p class="article-kicker" data-no-select>WRITING / {categories[0] ? getTaxonomyLabel('categories', categories[0]).toLocaleUpperCase('zh-CN') : 'NOTE'}</p>
+    <h1>{title}</h1>
+    {description && <p class="article-dek">{description}</p>}
+    <div class="article-info">
+      {categories.length > 0 && (
+        <div class="article-categories">
+          <span>收录于</span>
+          {categories.map((category) => (
+            <a href={getTaxonomyUrl('categories', category)}><Icon name="folder" size={14} /> {getTaxonomyLabel('categories', category)}</a>
+          ))}
+        </div>
+      )}
+      {(dateText || wordCount || readText || updatedText) && (
+        <div class="article-meta">
+          {dateText && <span><Icon name="calendar" size={15} /><time datetime={validDate?.toISOString()}>{dateText}</time></span>}
+          {typeof wordCount === 'number' && <span>✎ 约 {wordCount} 字</span>}
+          {readText && <span><Icon name="clock" size={15} /> {readText}</span>}
+          {updatedText && <span>更新于 {updatedText}</span>}
+        </div>
+      )}
+    </div>
+  </header>
+
+  {showToc && <TableOfContents headings={headings} />}
+  <div class="article-body prose"><slot /></div>
+
+  {tags.length > 0 && (
+    <footer class="article-footer">
+      <span>标签：</span>
+      {tags.map((tag, index) => (
+        <><a href={getTaxonomyUrl('tags', tag)}>{getTaxonomyLabel('tags', tag)}</a>{index < tags.length - 1 && <span>, </span>}</>
+      ))}
+    </footer>
+  )}
+</article>
+
+<style>
+  .article {
+    padding-top: 0;
+  }
+
+  .article-header h1 {
+    max-width: 18ch;
+    margin: 0;
+    color: var(--text);
+    font-size: clamp(2.25rem, 5.5vw, 4.8rem);
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    line-height: 1.02;
+  }
+
+  .article-header {
+    padding: clamp(4.5rem, 8vw, 6.8rem) 0 0.8rem;
+    border-bottom: 1px solid var(--border-strong);
+  }
+
+  .article-kicker {
+    margin: 0 0 0.85rem;
+    color: var(--accent);
+    font-family: var(--font-code);
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.11em;
+  }
+
+  .article-dek {
+    max-width: 46rem;
+    margin: 1.2rem 0 0;
+    color: var(--secondary);
+    font-size: 0.88rem;
+    line-height: 1.7;
+  }
+
+  .article-info {
+    margin-top: 1.35rem;
+    padding-top: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .article-categories,
+  .article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+    color: var(--secondary);
+    font-family: var(--font-code);
+    font-size: 0.58rem;
+    letter-spacing: 0.03em;
+  }
+
+  .article-categories {
+    flex: none;
+  }
+
+  .article-categories a,
+  .article-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+  }
+
+  .article-categories a {
+    color: inherit;
+  }
+
+  .article-categories a:hover {
+    color: var(--link-hover);
+  }
+
+  .article-meta > * + *::before {
+    margin-right: 0.2rem;
+    content: "·";
+  }
+
+  .article-body {
+    margin-top: 2rem;
+  }
+
+  .article-footer {
+    margin-top: 2rem;
+    padding: 1rem 0;
+    border-block: 1px solid var(--border);
+    color: var(--secondary);
+    font-family: var(--font-code);
+    font-size: 0.62rem;
+  }
+
+  .article-footer a {
+    color: var(--text);
+  }
+
+  .article-footer a:hover { color: var(--accent); }
+
+  @media (max-width: 42rem) {
+    .article-header h1 {
+      font-size: clamp(2rem, 10vw, 2.85rem);
+    }
+
+    .article-header {
+      padding-top: 4.5rem;
+    }
+
+    .article-info {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+</style>

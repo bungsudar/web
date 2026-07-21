@@ -1,0 +1,217 @@
+---
+import Icon from '../../components/Icon.astro';
+import PageHero from '../../components/PageHero.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublishedPosts, getTags } from '../../lib/content';
+
+const posts = await getPublishedPosts();
+const tags = getTags(posts, 'count');
+---
+
+<BaseLayout title="所有标签" description="按具体技术、概念与话题浏览 zu1k 的文章。">
+  <div class="wide-page tags-page" data-tags-page>
+    <PageHero
+      eyebrow="KEYWORDS / INDEX"
+      title="所有标签"
+      description="一份从文章里生长出来的关键词索引。搜索技术、概念或某个阶段反复出现的话题。"
+      mark={tags.length}
+      compact
+    >
+      <div slot="aside"><strong>{tags.length}</strong> 个关键词<br />覆盖 <strong>{posts.length}</strong> 篇文章</div>
+    </PageHero>
+
+    <section class="tag-explorer" aria-labelledby="tag-explorer-title">
+      <header>
+        <div>
+          <p>EXPLORE THE VOCABULARY</p>
+          <h2 id="tag-explorer-title">关键词词典</h2>
+        </div>
+        <output data-tag-status aria-live="polite">{tags.length} 个标签</output>
+      </header>
+
+      <label class="tag-search" for="tag-search-input">
+        <Icon name="search" size={18} />
+        <span class="visually-hidden">搜索标签</span>
+        <input id="tag-search-input" type="search" placeholder="输入标签名称…" autocomplete="off" data-tag-search />
+        <button type="button" data-tag-clear hidden>清除</button>
+      </label>
+
+      <div class="tag-cloud" aria-label="全部标签" data-tag-cloud>
+        {tags.map((term, index) => (
+          <a href={term.url} data-tag-item data-search={term.name.normalize('NFKC').toLocaleLowerCase('zh-CN')}>
+            <span>{String(index + 1).padStart(2, '0')}</span>
+            <strong>{term.name}</strong>
+            <sup>{term.count}</sup>
+          </a>
+        ))}
+      </div>
+      <div class="tag-empty" data-tag-empty hidden>没有匹配的标签，试试更短的关键词。</div>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  const tagRoot = document.querySelector<HTMLElement>('[data-tags-page]');
+  const tagInput = tagRoot?.querySelector<HTMLInputElement>('[data-tag-search]');
+  const tagItems = [...(tagRoot?.querySelectorAll<HTMLElement>('[data-tag-item]') ?? [])];
+  const tagStatus = tagRoot?.querySelector<HTMLOutputElement>('[data-tag-status]');
+  const tagClear = tagRoot?.querySelector<HTMLButtonElement>('[data-tag-clear]');
+  const tagEmpty = tagRoot?.querySelector<HTMLElement>('[data-tag-empty]');
+
+  const filterTags = () => {
+    const query = (tagInput?.value ?? '').normalize('NFKC').toLocaleLowerCase('zh-CN').trim();
+    let count = 0;
+    tagItems.forEach((item) => {
+      const visible = !query || (item.dataset.search ?? '').includes(query);
+      item.hidden = !visible;
+      if (visible) count += 1;
+    });
+    if (tagStatus) tagStatus.textContent = query ? `“${tagInput?.value.trim()}” · ${count} 个结果` : `${count} 个标签`;
+    if (tagClear) tagClear.hidden = !query;
+    if (tagEmpty) tagEmpty.hidden = count !== 0;
+  };
+
+  tagInput?.addEventListener('input', filterTags);
+  tagClear?.addEventListener('click', () => {
+    if (!tagInput) return;
+    tagInput.value = '';
+    tagInput.focus();
+    filterTags();
+  });
+</script>
+
+<style>
+  .tags-page :global(.page-hero__aside strong) {
+    color: var(--text);
+    font-family: var(--font-code);
+    font-size: 1.25rem;
+  }
+
+  .tag-explorer {
+    padding: clamp(3.5rem, 7vw, 5.5rem) clamp(0rem, 3vw, 2rem) 0;
+  }
+
+  .tag-explorer > header {
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .tag-explorer > header p {
+    margin: 0 0 0.6rem;
+    color: var(--accent);
+    font-family: var(--font-code);
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+  }
+
+  .tag-explorer h2 {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  .tag-explorer output {
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: 0.6rem;
+  }
+
+  .tag-search {
+    min-height: 3.25rem;
+    padding: 0 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    border-block: 1px solid var(--border-strong);
+    color: var(--muted);
+  }
+
+  .tag-search:focus-within { color: var(--accent); }
+
+  .tag-search input {
+    min-width: 0;
+    flex: 1;
+    border: 0;
+    outline: 0;
+    color: var(--text);
+    background: transparent;
+    font-size: 0.86rem;
+  }
+
+  .tag-search button {
+    padding: 0;
+    border: 0;
+    color: var(--accent);
+    background: transparent;
+    cursor: pointer;
+    font-family: var(--font-code);
+    font-size: 0.58rem;
+  }
+
+  .tag-cloud {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-left: 1px solid var(--border);
+  }
+
+  .tag-cloud a {
+    min-width: 0;
+    min-height: 5.2rem;
+    padding: 0.75rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: 0.4rem;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    transition: color 0.18s ease, background-color 0.18s ease;
+  }
+
+  .tag-cloud a:hover {
+    color: var(--accent);
+    background: var(--surface-soft);
+  }
+
+  .tag-cloud a[hidden] { display: none; }
+
+  .tag-cloud span {
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: 0.5rem;
+  }
+
+  .tag-cloud strong {
+    min-width: 0;
+    align-self: end;
+    overflow: hidden;
+    font-size: 0.86rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tag-cloud sup {
+    color: var(--accent);
+    font-family: var(--font-code);
+    font-size: 0.55rem;
+  }
+
+  .tag-empty {
+    padding: 4rem 1rem;
+    border-bottom: 1px solid var(--border-strong);
+    color: var(--muted);
+    text-align: center;
+  }
+
+  @media (max-width: 58rem) { .tag-cloud { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 40rem) {
+    .tag-explorer { padding-top: 3.2rem; }
+    .tag-cloud { grid-template-columns: repeat(2, 1fr); }
+    .tag-cloud a { min-height: 4.7rem; }
+  }
+</style>

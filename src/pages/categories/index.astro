@@ -1,0 +1,160 @@
+---
+import Icon from '../../components/Icon.astro';
+import PageHero from '../../components/PageHero.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { filterPostsByTaxonomy, formatDate, getCategories, getPostUrl, getPublishedPosts } from '../../lib/content';
+
+const posts = await getPublishedPosts();
+const categories = getCategories(posts, 'count');
+---
+
+<BaseLayout title="所有分类" description="按领域浏览 zu1k 的文章。">
+  <div class="wide-page categories-page">
+    <PageHero
+      eyebrow="TOPICS / COLLECTIONS"
+      title="所有分类"
+      description="把长期写作整理成一组可进入的主题书架。从编程与安全，到生活、经验和对当下的思考。"
+      mark={categories.length}
+      compact
+    >
+      <div slot="aside"><strong>{posts.length}</strong> 篇文章<br /><strong>{categories.length}</strong> 个持续主题</div>
+    </PageHero>
+
+    <section class="category-library" aria-label="全部分类">
+      {categories.map((term, index) => {
+        const categoryPosts = filterPostsByTaxonomy(posts, 'categories', term.value);
+        return (
+          <article class="category-card">
+            <header>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <b>{term.count} 篇</b>
+            </header>
+            <h2><a href={term.url}><Icon name="folder" size={20} /> {term.name}</a></h2>
+            <ol>
+              {categoryPosts.slice(0, 4).map((post) => (
+                <li>
+                  <a href={getPostUrl(post)}>{post.data.title}</a>
+                  <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date, 'short').slice(5)}</time>
+                </li>
+              ))}
+            </ol>
+            <a class="category-card__more" href={term.url}>进入主题 <span aria-hidden="true">↗</span></a>
+          </article>
+        );
+      })}
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .categories-page :global(.page-hero__aside) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+  }
+
+  .categories-page :global(.page-hero__aside strong) {
+    color: var(--text);
+    font-family: var(--font-code);
+    font-size: 1.35rem;
+  }
+
+  .category-library {
+    padding: clamp(3.5rem, 7vw, 5.5rem) clamp(0rem, 3vw, 2rem) 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+
+  .category-card {
+    min-height: 19rem;
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-strong);
+    border-radius: 0.5rem;
+    background: color-mix(in srgb, var(--page-raised) 95%, var(--surface-soft));
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .category-card:hover {
+    border-color: color-mix(in srgb, var(--accent) 48%, var(--border-strong));
+    box-shadow: 0 0.8rem 2.2rem rgb(0 0 0 / 6%);
+    transform: translateY(-0.16rem);
+  }
+
+  .category-card header {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: 0.56rem;
+    letter-spacing: 0.06em;
+  }
+
+  .category-card header span { color: var(--accent); }
+  .category-card header b { font-weight: 400; }
+
+  .category-card h2 {
+    margin: 1rem 0;
+    font-size: 1.45rem;
+  }
+
+  .category-card h2 a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--text);
+  }
+
+  .category-card h2 :global(svg) { color: var(--accent); }
+
+  .category-card ol {
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border);
+    list-style: none;
+  }
+
+  .category-card li {
+    min-width: 0;
+    padding: 0.48rem 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.8rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .category-card li a {
+    overflow: hidden;
+    color: var(--secondary);
+    font-size: 0.74rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .category-card li a:hover { color: var(--accent); }
+
+  .category-card time {
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: 0.54rem;
+  }
+
+  .category-card__more {
+    margin-top: auto;
+    padding-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    color: var(--text);
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .category-card__more span { color: var(--accent); }
+
+  @media (max-width: 44rem) {
+    .category-library { grid-template-columns: 1fr; padding-top: 3.2rem; }
+    .category-card { min-height: 18rem; }
+  }
+</style>

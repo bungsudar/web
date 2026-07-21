@@ -1,0 +1,71 @@
+export interface Friend {
+  name: string;
+  url: string;
+  avatar: string;
+  description: string;
+  weight: number;
+}
+
+/** Friend links displayed on the site. */
+export const friends = [
+  {
+    name: '港岛妹妹',
+    url: 'https://gangdaomeimei.cn/',
+    avatar: '/images/friends/gdmm.webp',
+    description: '一个互联网炒饭评论员的站点',
+    weight: 1,
+  },
+  {
+    name: '没事我就挠脑袋',
+    url: 'https://iamywang.github.io/',
+    avatar: '/images/friends/iamwang.webp',
+    description: 'All or Nothing, 侧信道安全、足球',
+    weight: 2,
+  },
+  {
+    name: '簞純',
+    url: 'https://blog.qwqdanchun.com/',
+    avatar: '/images/friends/danchun.webp',
+    description: '我惭携宝剑，只为看山来',
+    weight: 10,
+  },
+  {
+    name: '漩涡',
+    url: 'https://xuanwo.io/',
+    avatar: '/images/friends/xuanwo.webp',
+    description: '开源爱好者，专注自动化，分布式系统和存储',
+    weight: 15,
+  },
+  {
+    name: 'yihong',
+    url: 'https://github.com/yihong0618/gitblog',
+    avatar: '/images/friends/yihong.webp',
+    description: '大连跑者，喜爱游戏，跑步，读书，编程和有趣的东西',
+    weight: 16,
+  },
+  {
+    name: '银色子弹',
+    url: 'https://silverrainz.me/',
+    avatar: '/images/friends/sliverrainz.webp',
+    description: 'Programmer, Part-time artist',
+    weight: 20,
+  },
+  {
+    name: '烧饼博客',
+    url: 'https://u.sb/',
+    avatar: '/images/friends/sb.webp',
+    description: '专注于服务器运维、专业域名投资分析',
+    weight: 21,
+  },
+  {
+    name: 'Sarace',
+    url: 'https://blog.huisa.win/',
+    avatar: '/images/friends/sarace.webp',
+    description: 'Knowledge comes from books and from experience of the world',
+    weight: 22,
+  },
+] as const satisfies readonly Friend[];
+
+export const FRIENDS = friends;
+export const blogroll = friends;
+export default friends;

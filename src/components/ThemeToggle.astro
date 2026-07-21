@@ -1,0 +1,73 @@
+---
+import Icon from './Icon.astro';
+---
+
+<button class="theme-toggle" type="button" data-theme-toggle aria-label="切换为深色主题" title="切换为深色主题">
+  <span class="theme-toggle__sun"><Icon name="sun" size={18} /></span>
+  <span class="theme-toggle__moon"><Icon name="moon" size={18} /></span>
+</button>
+
+<script>
+  const storageKey = 'zu1k-theme';
+
+  function updateThemeControls(theme: 'light' | 'dark') {
+    const nextLabel = theme === 'dark' ? '切换为浅色主题' : '切换为深色主题';
+    document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((button) => {
+      button.setAttribute('aria-label', nextLabel);
+      button.setAttribute('title', nextLabel);
+      button.setAttribute('aria-pressed', String(theme === 'dark'));
+    });
+  }
+
+  updateThemeControls(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+
+  document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      try { localStorage.setItem(storageKey, next); } catch {}
+      updateThemeControls(next);
+    });
+  });
+</script>
+
+<style>
+  .theme-toggle {
+    position: relative;
+    width: 2rem;
+    height: 2.5rem;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .theme-toggle > span {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    transition: opacity 0.2s ease, transform 0.3s ease;
+  }
+
+  .theme-toggle__moon {
+    opacity: 0;
+    transform: rotate(-45deg) scale(0.75);
+  }
+
+  :global(:root[data-theme="dark"]) .theme-toggle__sun {
+    opacity: 0;
+    transform: rotate(45deg) scale(0.75);
+  }
+
+  :global(:root[data-theme="dark"]) .theme-toggle__moon {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+
+  .theme-toggle:hover {
+    color: var(--link-hover);
+  }
+</style>

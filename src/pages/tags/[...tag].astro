@@ -1,0 +1,24 @@
+---
+import ArchiveList from '../../components/ArchiveList.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { filterPostsByTaxonomy, getPublishedPosts, getTags } from '../../lib/content';
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+  return getTags(posts).map((term) => ({
+    params: { tag: term.slug },
+    props: { term, posts: filterPostsByTaxonomy(posts, 'tags', term.value) },
+  }));
+}
+
+const { term, posts } = Astro.props;
+---
+
+<BaseLayout title={term.name} description={`标签「${term.name}」下的 ${posts.length} 篇文章。`}>
+  <ArchiveList
+    posts={posts}
+    title={term.name}
+    description={`所有与「${term.name}」相关的文章片段与技术笔记。`}
+    eyebrow="TAG / INDEX"
+  />
+</BaseLayout>

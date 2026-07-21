@@ -1,0 +1,36 @@
+---
+import ArchiveList from '../../../components/ArchiveList.astro';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getPublishedPosts } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  const pageSize = 20;
+  const allPosts = await getPublishedPosts();
+  const totalPages = Math.ceil(allPosts.length / pageSize);
+  return Array.from({ length: Math.max(0, totalPages - 1) }, (_, index) => {
+    const page = index + 2;
+    return {
+      params: { page: String(page) },
+      props: {
+        page,
+        totalPages,
+        totalCount: allPosts.length,
+        posts: allPosts.slice((page - 1) * pageSize, page * pageSize),
+      },
+    };
+  });
+}
+
+const { page, totalPages, totalCount, posts } = Astro.props;
+---
+
+<BaseLayout title={`所有文章 · 第 ${page} 页`} description={`zu1k 文章归档第 ${page} 页。`}>
+  <ArchiveList
+    posts={posts}
+    title="所有文章"
+    description={`从最近一次排查，到更早的技术实验与生活片段。这里是 ${totalCount} 篇文章的时间索引。`}
+    totalCount={totalCount}
+    page={page}
+    totalPages={totalPages}
+  />
+</BaseLayout>

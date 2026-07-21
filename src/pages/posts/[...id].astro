@@ -1,0 +1,141 @@
+---
+import { render } from 'astro:content';
+import ArticleChrome from '../../components/ArticleChrome.astro';
+import ArticleEnhancements from '../../features/ArticleEnhancements.astro';
+import Comments from '../../features/Comments.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+  getAdjacentPosts,
+  getExcerpt,
+  getPostSlug,
+  getPostUrl,
+  getPublishedPosts,
+  getReadingTime,
+  normalizeTaxonomy,
+} from '../../lib/content';
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts({ includeDrafts: !import.meta.env.PROD });
+  return posts.map((post) => ({
+    params: { id: getPostSlug(post) },
+    props: { post, posts },
+  }));
+}
+
+const { post, posts } = Astro.props;
+const { Content, headings } = await render(post);
+const description = post.data.description || post.data.summary || getExcerpt(post, 180);
+const reading = getReadingTime(post);
+const categories = normalizeTaxonomy(post.data.categories);
+const tags = normalizeTaxonomy(post.data.tags);
+const adjacent = getAdjacentPosts(posts, post);
+const hasMermaid = Boolean(post.data.mermaid || post.body?.includes('```mermaid'));
+const commentsEnabled = post.data.comment !== false;
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={description}
+  type="article"
+  publishedTime={post.data.date}
+  canonical={getPostUrl(post)}
+>
+  <ArticleChrome
+    title={post.data.title}
+    description={description}
+    date={post.data.date}
+    readingTime={reading.minutes}
+    wordCount={reading.words}
+    categories={categories}
+    tags={tags}
+    headings={headings}
+    toc={post.data.toc !== false}
+  >
+    <Content />
+  </ArticleChrome>
+
+  <nav class="post-nav" aria-label="相邻文章">
+    {adjacent.previous ? (
+      <a class="post-nav__older" href={getPostUrl(adjacent.previous)}>
+        <span>← 上一篇 / OLDER</span>
+        <strong>{adjacent.previous.data.title}</strong>
+      </a>
+    ) : <span></span>}
+    {adjacent.next && (
+      <a class="post-nav__newer" href={getPostUrl(adjacent.next)}>
+        <span>下一篇 / NEWER →</span>
+        <strong>{adjacent.next.data.title}</strong>
+      </a>
+    )}
+  </nav>
+
+  {commentsEnabled && <Comments title={post.data.title} />}
+  <ArticleEnhancements mermaid={hasMermaid} />
+</BaseLayout>
+
+<style>
+  .post-nav {
+    width: 60%;
+    max-width: var(--page-width);
+    margin: 2.5rem auto 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+
+  .post-nav a,
+  .post-nav > span {
+    min-height: 7rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: 0.4rem;
+    background: var(--page-raised);
+    text-decoration: none;
+  }
+
+  .post-nav a > span {
+    color: var(--secondary);
+    font-family: var(--font-code);
+    font-size: 0.55rem;
+    letter-spacing: 0.05em;
+  }
+
+  .post-nav strong {
+    margin-top: 0.25rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .post-nav__newer {
+    text-align: right;
+  }
+
+  .post-nav a:hover strong {
+    color: var(--accent);
+  }
+
+  .post-nav a:hover {
+    border-color: color-mix(in srgb, var(--accent) 48%, var(--border-strong));
+    box-shadow: 0 0.7rem 2rem rgb(0 0 0 / 5%);
+  }
+
+  @media (max-width: 68rem) {
+    .post-nav { width: 80%; }
+  }
+
+  @media (max-width: 38rem) {
+    .post-nav {
+      width: calc(100% - 2rem);
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .post-nav > span:empty {
+      display: none;
+    }
+  }
+</style>

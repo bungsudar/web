@@ -1,0 +1,24 @@
+---
+import ArchiveList from '../../components/ArchiveList.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { filterPostsByTaxonomy, getCategories, getPublishedPosts } from '../../lib/content';
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+  return getCategories(posts).map((term) => ({
+    params: { category: term.slug },
+    props: { term, posts: filterPostsByTaxonomy(posts, 'categories', term.value) },
+  }));
+}
+
+const { term, posts } = Astro.props;
+---
+
+<BaseLayout title={term.name} description={`分类「${term.name}」下的 ${posts.length} 篇文章。`}>
+  <ArchiveList
+    posts={posts}
+    title={term.name}
+    description={`收录在「${term.name}」主题下的文章与长期记录。`}
+    eyebrow="CATEGORY / TOPIC"
+  />
+</BaseLayout>

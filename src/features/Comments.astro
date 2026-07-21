@@ -1,0 +1,97 @@
+---
+export interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<section class="comments" aria-labelledby="comments-title" data-giscus-host data-page-title={title}>
+  <div class="comments__heading">
+    <h2 id="comments-title">评论</h2>
+    <p>由 GitHub Discussions 驱动，发布前需要登录 GitHub。</p>
+  </div>
+  <div class="comments__mount" aria-live="polite"></div>
+</section>
+
+<script>
+  const hosts = document.querySelectorAll<HTMLElement>('[data-giscus-host]');
+
+  const currentGiscusTheme = () =>
+    document.documentElement.dataset.theme === 'dark' ? 'dark_dimmed' : 'light';
+
+  hosts.forEach((host) => {
+    const mount = host.querySelector<HTMLElement>('.comments__mount');
+    if (!mount || mount.dataset.loaded) return;
+    mount.dataset.loaded = 'true';
+
+    const script = document.createElement('script');
+    const settings = {
+      src: 'https://giscus.app/client.js',
+      repo: 'zu1k/blog',
+      repoId: 'MDEwOlJlcG9zaXRvcnkzMDExMDQ1OTU=',
+      category: 'Comments',
+      categoryId: 'DIC_kwDOEfJ9084CA02V',
+      mapping: 'og:title',
+      strict: '0',
+      reactionsEnabled: '1',
+      emitMetadata: '0',
+      inputPosition: 'top',
+      theme: currentGiscusTheme(),
+      lang: 'zh-CN',
+      loading: 'lazy',
+    };
+
+    Object.entries(settings).forEach(([key, value]) => {
+      if (key === 'src') script.src = value;
+      else script.setAttribute(`data-${key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`, value);
+    });
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    mount.append(script);
+  });
+
+  let lastTheme = currentGiscusTheme();
+  new MutationObserver(() => {
+    const theme = currentGiscusTheme();
+    if (theme === lastTheme) return;
+    lastTheme = theme;
+    document.querySelectorAll<HTMLIFrameElement>('iframe.giscus-frame').forEach((frame) => {
+      frame.contentWindow?.postMessage({ giscus: { setConfig: { theme } } }, 'https://giscus.app');
+    });
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+</script>
+
+<style>
+  .comments {
+    width: 60%;
+    max-width: var(--page-width);
+    margin: 4rem auto 0;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border);
+  }
+
+  .comments__heading {
+    margin-bottom: 2rem;
+  }
+
+  .comments__heading h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  .comments__heading > p:last-child {
+    margin: 0.55rem 0 0;
+    color: var(--secondary);
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 68rem) {
+    .comments { width: 80%; }
+  }
+
+  @media (max-width: 42rem) {
+    .comments { width: calc(100% - 2rem); }
+  }
+</style>

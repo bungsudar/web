@@ -1,0 +1,558 @@
+---
+export interface Props {
+  mermaid?: boolean;
+}
+
+const { mermaid = false } = Astro.props;
+---
+
+<dialog class="image-viewer" data-image-viewer aria-label="图片预览">
+  <button type="button" data-image-close aria-label="关闭图片预览">×</button>
+  <figure>
+    <img alt="" />
+    <figcaption></figcaption>
+  </figure>
+</dialog>
+
+<script>
+  const article = document.querySelector<HTMLElement>('.article-body');
+
+  const languageNames: Record<string, string> = {
+    bash: 'Bash',
+    c: 'C',
+    cpp: 'C++',
+    'c++': 'C++',
+    csharp: 'C#',
+    cs: 'C#',
+    css: 'CSS',
+    docker: 'Dockerfile',
+    dockerfile: 'Dockerfile',
+    go: 'Go',
+    golang: 'Go',
+    html: 'HTML',
+    ini: 'INI',
+    java: 'Java',
+    javascript: 'JavaScript',
+    js: 'JavaScript',
+    json: 'JSON',
+    jsx: 'JSX',
+    markdown: 'Markdown',
+    md: 'Markdown',
+    nginx: 'Nginx',
+    php: 'PHP',
+    plaintext: 'Plain text',
+    text: 'Plain text',
+    powershell: 'PowerShell',
+    ps1: 'PowerShell',
+    python: 'Python',
+    py: 'Python',
+    rust: 'Rust',
+    sh: 'Shell',
+    shell: 'Shell',
+    sql: 'SQL',
+    toml: 'TOML',
+    ts: 'TypeScript',
+    tsx: 'TSX',
+    typescript: 'TypeScript',
+    xml: 'XML',
+    yaml: 'YAML',
+    yml: 'YAML',
+  };
+
+  const getLanguageName = (pre: HTMLPreElement) => {
+    const classLanguage = [...(pre.querySelector('code')?.classList ?? [])]
+      .find((name) => name.startsWith('language-'))
+      ?.slice('language-'.length);
+    const language = (pre.dataset.language || classLanguage || 'plaintext').toLocaleLowerCase();
+    return languageNames[language] || language.replace(/(^|[-_])(\w)/g, (_, separator, letter) => `${separator}${letter.toUpperCase()}`);
+  };
+
+  article?.querySelectorAll<HTMLPreElement>('pre').forEach((pre) => {
+    if (pre.dataset.language?.toLocaleLowerCase() === 'mermaid' || pre.querySelector('code.language-mermaid') || pre.closest('.code-frame')) return;
+    const language = getLanguageName(pre);
+    const frame = document.createElement('div');
+    frame.className = 'code-frame';
+    frame.role = 'group';
+    frame.setAttribute('aria-label', `${language} 代码片段`);
+    pre.parentNode?.insertBefore(frame, pre);
+
+    const languageLabel = document.createElement('span');
+    languageLabel.className = 'code-language';
+    const languageValue = document.createElement('strong');
+    languageValue.textContent = language;
+    languageLabel.append(languageValue);
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'code-copy';
+    button.textContent = '复制';
+    button.setAttribute('aria-label', '复制代码');
+    button.addEventListener('click', async () => {
+      const code = pre.querySelector('code')?.textContent ?? pre.textContent ?? '';
+      try {
+        await navigator.clipboard.writeText(code);
+        button.textContent = '已复制';
+        button.dataset.state = 'success';
+      } catch {
+        button.textContent = '复制失败';
+        button.dataset.state = 'error';
+      }
+      window.setTimeout(() => {
+        button.textContent = '复制';
+        delete button.dataset.state;
+      }, 1600);
+    });
+    frame.append(languageLabel, button, pre);
+  });
+
+  const viewer = document.querySelector<HTMLDialogElement>('[data-image-viewer]');
+  const viewerImage = viewer?.querySelector<HTMLImageElement>('img');
+  const viewerCaption = viewer?.querySelector<HTMLElement>('figcaption');
+
+  article?.querySelectorAll<HTMLImageElement>('img').forEach((image) => {
+    image.tabIndex = 0;
+    image.role = 'button';
+    image.setAttribute('aria-label', `${image.alt || '图片'}，点击放大`);
+    const open = () => {
+      if (!viewer || !viewerImage || !viewerCaption) return;
+      viewerImage.src = image.currentSrc || image.src;
+      viewerImage.alt = image.alt;
+      viewerCaption.textContent = image.alt;
+      viewerCaption.hidden = !image.alt;
+      viewer.showModal();
+    };
+    image.addEventListener('click', open);
+    image.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        open();
+      }
+    });
+  });
+
+  viewer?.querySelector('[data-image-close]')?.addEventListener('click', () => viewer.close());
+  viewer?.addEventListener('click', (event) => {
+    if (event.target === viewer) viewer.close();
+  });
+</script>
+
+{mermaid && (
+  <script>
+    const mermaidArticle = document.querySelector<HTMLElement>('.article-body');
+    const mermaidBlocks = [...(mermaidArticle?.querySelectorAll<HTMLPreElement>('pre') ?? [])]
+      .filter((pre) => pre.dataset.language?.toLocaleLowerCase() === 'mermaid' || Boolean(pre.querySelector(':scope > code.language-mermaid')));
+
+    if (mermaidBlocks.length > 0) {
+      const [{ default: mermaidApi }, { default: Prism }] = await Promise.all([
+        import('mermaid'),
+        import('prismjs'),
+      ]);
+      await import('prismjs/components/prism-mermaid.js');
+
+      const diagrams = mermaidBlocks.map((pre, index) => {
+        const source = pre.querySelector('code')?.textContent?.trim() ?? pre.textContent?.trim() ?? '';
+        const code = pre.querySelector('code');
+        if (code && Prism.languages.mermaid) {
+          const highlighted = document.createElement('template');
+          highlighted.innerHTML = Prism.highlight(source, Prism.languages.mermaid, 'mermaid');
+          code.replaceChildren(highlighted.content);
+        }
+        const frame = document.createElement('figure');
+        const status = document.createElement('p');
+        const canvas = document.createElement('div');
+        const toggle = document.createElement('button');
+
+        frame.className = 'mermaid-frame';
+        frame.dataset.state = 'loading';
+        frame.dataset.view = 'diagram';
+        frame.setAttribute('aria-label', `Mermaid 图表 ${index + 1}`);
+        status.className = 'mermaid-error';
+        status.hidden = true;
+        canvas.className = 'mermaid-canvas';
+        canvas.id = `mermaid-view-${index}`;
+        canvas.role = 'img';
+        canvas.setAttribute('aria-label', `文章中的 Mermaid 图表 ${index + 1}`);
+        pre.classList.add('mermaid-source');
+        pre.id = `mermaid-source-${index}`;
+        pre.hidden = true;
+        toggle.className = 'mermaid-toggle';
+        toggle.type = 'button';
+        toggle.textContent = '查看源码';
+        toggle.setAttribute('aria-controls', `${canvas.id} ${pre.id}`);
+        toggle.setAttribute('aria-pressed', 'false');
+        toggle.setAttribute('aria-label', `查看第 ${index + 1} 张 Mermaid 图表的源码`);
+        toggle.addEventListener('click', () => {
+          const showSource = frame.dataset.view !== 'source';
+          frame.dataset.view = showSource ? 'source' : 'diagram';
+          canvas.hidden = showSource;
+          pre.hidden = !showSource;
+          toggle.textContent = showSource ? '返回图表' : '查看源码';
+          toggle.setAttribute('aria-pressed', String(showSource));
+          toggle.setAttribute('aria-label', showSource
+            ? `返回第 ${index + 1} 张 Mermaid 图表`
+            : `查看第 ${index + 1} 张 Mermaid 图表的源码`);
+        });
+
+        pre.parentNode?.insertBefore(frame, pre);
+        frame.append(canvas, status, toggle, pre);
+
+        return { source, frame, canvas, status, toggle, pre };
+      });
+
+      const getMermaidConfig = () => {
+        const styles = getComputedStyle(document.documentElement);
+        const css = (name: string) => styles.getPropertyValue(name).trim();
+        const isDark = document.documentElement.dataset.theme === 'dark';
+
+        return {
+          startOnLoad: false,
+          securityLevel: 'strict' as const,
+          suppressErrorRendering: true,
+          theme: 'base' as const,
+          fontFamily: css('--font-serif'),
+          themeVariables: {
+            darkMode: isDark,
+            background: css('--page-bg'),
+            fontFamily: css('--font-serif'),
+            fontSize: '15px',
+            primaryColor: css('--surface-soft'),
+            primaryTextColor: css('--text'),
+            primaryBorderColor: css('--border-strong'),
+            secondaryColor: css('--page-raised'),
+            secondaryTextColor: css('--text'),
+            secondaryBorderColor: css('--border-strong'),
+            tertiaryColor: css('--code-bg'),
+            tertiaryTextColor: css('--text'),
+            tertiaryBorderColor: css('--border'),
+            lineColor: css('--muted'),
+            textColor: css('--secondary'),
+            noteBkgColor: css('--surface-soft'),
+            noteTextColor: css('--text'),
+            noteBorderColor: css('--accent'),
+            actorBkg: css('--surface-soft'),
+            actorBorder: css('--border-strong'),
+            actorTextColor: css('--text'),
+            actorLineColor: css('--muted'),
+            signalColor: css('--secondary'),
+            signalTextColor: css('--text'),
+            labelBoxBkgColor: css('--page-raised'),
+            labelBoxBorderColor: css('--border-strong'),
+            labelTextColor: css('--text'),
+            loopTextColor: css('--text'),
+            activationBkgColor: css('--code-bg'),
+            activationBorderColor: css('--accent'),
+            sequenceNumberColor: css('--page-bg'),
+          },
+        };
+      };
+
+      let renderVersion = 0;
+      let renderQueue = Promise.resolve();
+
+      const renderDiagrams = async () => {
+        const version = ++renderVersion;
+        mermaidApi.initialize(getMermaidConfig());
+
+        for (const [index, diagram] of diagrams.entries()) {
+          diagram.frame.dataset.state = 'loading';
+          diagram.status.hidden = true;
+          diagram.status.textContent = '';
+          diagram.canvas.setAttribute('aria-busy', 'true');
+
+          try {
+            diagram.frame.dataset.diagramType = mermaidApi.detectType(diagram.source);
+            const renderId = `mermaid-svg-${version}-${index}`;
+            const { svg, bindFunctions } = await mermaidApi.render(renderId, diagram.source);
+            if (version !== renderVersion) return;
+
+            const template = document.createElement('template');
+            template.innerHTML = svg.trim();
+            const svgElement = template.content.querySelector('svg');
+            if (!svgElement) throw new Error('Mermaid did not return an SVG element.');
+
+            svgElement.removeAttribute('height');
+            svgElement.setAttribute('role', 'img');
+            svgElement.setAttribute('aria-label', `文章中的 Mermaid 图表 ${index + 1}`);
+            svgElement.setAttribute('focusable', 'false');
+            diagram.canvas.replaceChildren(template.content);
+            bindFunctions?.(diagram.canvas);
+            diagram.frame.dataset.state = 'ready';
+            diagram.toggle.hidden = false;
+          } catch (error) {
+            if (version !== renderVersion) return;
+            diagram.canvas.replaceChildren();
+            diagram.frame.dataset.state = 'error';
+            diagram.frame.dataset.view = 'source';
+            diagram.status.hidden = false;
+            diagram.status.textContent = '图表渲染失败，下面保留了原始 Mermaid 源码。';
+            diagram.canvas.hidden = true;
+            diagram.pre.hidden = false;
+            diagram.toggle.hidden = true;
+            console.error(`Mermaid diagram ${index + 1} failed to render.`, error);
+          } finally {
+            diagram.canvas.removeAttribute('aria-busy');
+          }
+        }
+      };
+
+      const queueRender = () => {
+        renderQueue = renderQueue.then(renderDiagrams, renderDiagrams);
+      };
+
+      if ('fonts' in document) await document.fonts.ready;
+      queueRender();
+
+      let lastTheme = document.documentElement.dataset.theme;
+      new MutationObserver(() => {
+        const nextTheme = document.documentElement.dataset.theme;
+        if (nextTheme === lastTheme) return;
+        lastTheme = nextTheme;
+        queueRender();
+      }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    }
+  </script>
+)}
+
+<style>
+  :global(.code-frame) {
+    position: relative;
+    margin-block: 1.45em;
+  }
+
+  :global(.article-body .code-frame pre) {
+    margin-block: 0;
+    padding-top: 1.55rem;
+  }
+
+  :global(.code-language) {
+    position: absolute;
+    z-index: 2;
+    top: 0.48rem;
+    left: 1rem;
+    display: inline-flex;
+    align-items: center;
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: 0.58rem;
+    letter-spacing: 0.07em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  :global(.code-language strong) {
+    color: var(--muted);
+    font: inherit;
+    font-weight: 600;
+  }
+
+  :global(.code-copy) {
+    position: absolute;
+    z-index: 2;
+    top: 0.55rem;
+    right: 0.55rem;
+    padding: 0.25rem 0.48rem;
+    border: 1px solid var(--rule);
+    color: var(--ink-soft);
+    background: color-mix(in srgb, var(--code-bg) 88%, transparent);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    cursor: pointer;
+  }
+
+  :global(.code-copy:hover),
+  :global(.code-copy:focus-visible) {
+    color: var(--signal);
+    border-color: var(--signal);
+    outline: 0;
+  }
+
+  :global(.code-copy[data-state="success"]) {
+    color: var(--accent);
+  }
+
+  :global(.code-copy[data-state="error"]) {
+    color: var(--project-warm, #d64d72);
+  }
+
+  .image-viewer {
+    width: min(94vw, 90rem);
+    max-width: none;
+    max-height: 92vh;
+    padding: 2.75rem 1rem 1rem;
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    background: var(--paper-raised);
+    box-shadow: 0 2rem 7rem rgb(0 0 0 / 42%);
+  }
+
+  .image-viewer::backdrop {
+    background: rgb(12 13 10 / 78%);
+    backdrop-filter: blur(5px);
+  }
+
+  .image-viewer > button {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.6rem;
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    color: var(--ink);
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: 1.45rem;
+    cursor: pointer;
+  }
+
+  .image-viewer figure {
+    margin: 0;
+  }
+
+  .image-viewer img {
+    width: auto;
+    max-height: calc(92vh - 5rem);
+    margin: auto;
+    display: block;
+  }
+
+  .image-viewer figcaption {
+    margin-top: 0.7rem;
+    color: var(--ink-soft);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-align: center;
+  }
+
+  :global(.article-body img[role="button"]) {
+    cursor: zoom-in;
+  }
+
+  :global(.mermaid-frame) {
+    position: relative;
+    margin: 1.45em 0;
+    overflow: hidden;
+    border: 1px solid var(--border-strong);
+    border-radius: 0.55rem;
+    background: var(--page-raised);
+    box-shadow: 0 0.45rem 1.5rem rgb(0 0 0 / 4%);
+    text-align: left;
+  }
+
+  :global(.mermaid-canvas) {
+    min-height: 9rem;
+    padding: clamp(0.9rem, 3vw, 1.5rem);
+    overflow-x: auto;
+    display: grid;
+    place-items: center;
+    background: var(--page-raised);
+    scrollbar-width: thin;
+  }
+
+  :global(.mermaid-canvas[aria-busy="true"]) {
+    opacity: 0.55;
+  }
+
+  :global(.mermaid-canvas svg) {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    display: block;
+  }
+
+  :global(.mermaid-error) {
+    margin: 0;
+    padding: 0.55rem 0.75rem;
+    border-top: 1px solid var(--border);
+    color: var(--accent-warm);
+    font-family: var(--font-code);
+    font-size: 0.58rem;
+    text-align: left;
+  }
+
+  :global(.mermaid-toggle) {
+    position: absolute;
+    z-index: 2;
+    top: 0.55rem;
+    right: 0.65rem;
+    padding: 0.25rem 0.45rem;
+    border: 1px solid var(--border);
+    border-radius: 0.22rem;
+    color: var(--muted);
+    background: color-mix(in srgb, var(--page-raised) 88%, transparent);
+    font-family: var(--font-code);
+    font-size: 0.52rem;
+    font-weight: 400;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+  }
+
+  :global(.mermaid-toggle:hover),
+  :global(.mermaid-toggle:focus-visible) {
+    border-color: var(--accent);
+    color: var(--accent);
+    outline: 0;
+  }
+
+  :global(.mermaid-frame > .mermaid-source) {
+    margin: 0;
+    padding-top: 2.35rem;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    text-align: left;
+  }
+
+  :global(.mermaid-frame > .mermaid-source[hidden]),
+  :global(.mermaid-canvas[hidden]) {
+    display: none;
+  }
+
+  :global(.mermaid-frame > .mermaid-source code) {
+    display: block;
+    text-align: left;
+  }
+
+  :global(.mermaid-source .token.comment) {
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  :global(.mermaid-source .token.keyword),
+  :global(.mermaid-source .token.important) {
+    color: var(--accent-warm);
+    font-weight: 600;
+  }
+
+  :global(.mermaid-source .token.arrow),
+  :global(.mermaid-source .token.operator) {
+    color: var(--accent);
+  }
+
+  :global(.mermaid-source .token.string),
+  :global(.mermaid-source .token.property) {
+    color: color-mix(in srgb, #31824f 76%, var(--text));
+  }
+
+  :global(.mermaid-source .token.entity),
+  :global(.mermaid-source .token.function),
+  :global(.mermaid-source .token.variable) {
+    color: color-mix(in srgb, #7857b5 72%, var(--text));
+  }
+
+  :global(:root[data-theme="dark"] .mermaid-source .token.string),
+  :global(:root[data-theme="dark"] .mermaid-source .token.property) {
+    color: #9bcfa6;
+  }
+
+  :global(:root[data-theme="dark"] .mermaid-source .token.entity),
+  :global(:root[data-theme="dark"] .mermaid-source .token.function),
+  :global(:root[data-theme="dark"] .mermaid-source .token.variable) {
+    color: #c8a9ef;
+  }
+
+  @media (max-width: 42rem) {
+    :global(.mermaid-frame[data-diagram-type="sequence"] .mermaid-canvas svg) {
+      min-width: 34rem;
+    }
+  }
+</style>

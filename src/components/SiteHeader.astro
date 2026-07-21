@@ -1,0 +1,660 @@
+---
+import { NAV, SITE } from '../consts';
+import Icon from './Icon.astro';
+import ThemeToggle from './ThemeToggle.astro';
+
+export interface Props {
+  currentPath?: string;
+}
+
+const { currentPath = Astro.url.pathname } = Astro.props;
+const normalizedPath = currentPath.endsWith('/') ? currentPath : `${currentPath}/`;
+const isCurrent = (href: string) => href === '/' ? normalizedPath === '/' : normalizedPath.startsWith(href);
+---
+
+<header class="site-header">
+  <div class="header-wrapper">
+    <a class="header-title" href="/" aria-label={`${SITE.title} 首页`}>{SITE.title}</a>
+
+    <nav class="desktop-menu" aria-label="主导航">
+      {NAV.map((item) => (
+        <a class="menu-item" href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+          {item.label}
+        </a>
+      ))}
+      <a class="menu-icon" href="/rss.xml" aria-label="RSS" title="RSS"><Icon name="rss" size={18} /></a>
+      <a class="menu-icon" href="https://github.com/zu1k" rel="me noopener" aria-label="GitHub" title="GitHub"><Icon name="github" size={18} /></a>
+      <span class="menu-delimiter" aria-hidden="true"></span>
+      <form class="header-search" action="/search/" role="search" data-header-search>
+        <button type="button" class="header-search__toggle" aria-label="搜索" aria-expanded="false" data-header-search-toggle>
+          <Icon name="search" size={18} />
+        </button>
+        <input
+          name="q"
+          type="search"
+          aria-label="搜索文章标题或内容"
+          aria-controls="header-search-results"
+          aria-describedby="header-search-status"
+          aria-expanded="false"
+          placeholder="搜索文章标题或内容..."
+          autocomplete="off"
+          tabindex="-1"
+          data-header-search-input
+        />
+        <div class="header-search__preview" aria-label="搜索建议" data-header-search-preview hidden>
+          <div class="header-search__feedback">
+            <span id="header-search-status" data-header-search-status aria-live="polite">输入关键词开始搜索</span>
+            <button type="submit" class="header-search__enter"><kbd>↵</kbd> 查看全部</button>
+          </div>
+          <ol id="header-search-results" class="header-search__results" data-header-search-results></ol>
+          <a class="header-search__all" href="/search/" data-header-search-all>
+            <span>打开完整搜索</span><span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </form>
+      <ThemeToggle />
+    </nav>
+
+    <details class="mobile-menu" data-mobile-menu>
+      <summary aria-label="打开导航"><span></span><span></span><span></span></summary>
+      <div class="mobile-menu__panel">
+        <form action="/search/" role="search">
+          <Icon name="search" size={17} />
+          <input name="q" type="search" aria-label="搜索文章标题或内容" placeholder="搜索文章标题或内容..." autocomplete="off" />
+        </form>
+        <nav aria-label="移动端主导航">
+          {NAV.map((item) => (
+            <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>{item.label}</a>
+          ))}
+          <a href="/rss.xml">RSS</a>
+          <a href="https://github.com/zu1k" rel="me noopener">GitHub</a>
+        </nav>
+        <div class="mobile-menu__theme"><span>主题</span><ThemeToggle /></div>
+      </div>
+    </details>
+  </div>
+</header>
+
+<script>
+  type HeaderSearchItem = {
+    title: string;
+    url: string;
+    date: string;
+    timestamp: string;
+    summary: string;
+    content: string;
+    tags: string[];
+    categories: string[];
+    categoryLabel: string;
+  };
+
+  const search = document.querySelector<HTMLFormElement>('[data-header-search]');
+  const searchToggle = search?.querySelector<HTMLButtonElement>('[data-header-search-toggle]');
+  const searchInput = search?.querySelector<HTMLInputElement>('[data-header-search-input]');
+  const searchPreview = search?.querySelector<HTMLElement>('[data-header-search-preview]');
+  const searchStatus = search?.querySelector<HTMLElement>('[data-header-search-status]');
+  const searchResults = search?.querySelector<HTMLOListElement>('[data-header-search-results]');
+  const searchAll = search?.querySelector<HTMLAnchorElement>('[data-header-search-all]');
+  let searchIndexPromise: Promise<HeaderSearchItem[]> | undefined;
+
+  const normalizeSearchText = (value: string) => value.normalize('NFKC').toLocaleLowerCase('zh-CN');
+
+  const loadSearchIndex = () => {
+    searchIndexPromise ??= fetch('/search-index.json')
+      .then((response) => {
+        if (!response.ok) throw new Error(`Search index request failed: ${response.status}`);
+        return response.json() as Promise<HeaderSearchItem[]>;
+      });
+    return searchIndexPromise;
+  };
+
+  const setFullSearchUrl = (query: string) => {
+    if (!searchAll) return;
+    const url = new URL('/search/', location.origin);
+    if (query) url.searchParams.set('q', query);
+    searchAll.href = `${url.pathname}${url.search}`;
+  };
+
+  const renderSearchResults = (items: HeaderSearchItem[]) => {
+    if (!searchResults) return;
+    searchResults.replaceChildren();
+    items.forEach((item, index) => {
+      const row = document.createElement('li');
+      const link = document.createElement('a');
+      const serial = document.createElement('span');
+      const body = document.createElement('span');
+      const title = document.createElement('strong');
+      const meta = document.createElement('small');
+      const arrow = document.createElement('span');
+
+      link.href = item.url;
+      serial.className = 'header-search__serial';
+      serial.textContent = String(index + 1).padStart(2, '0');
+      body.className = 'header-search__result-body';
+      title.textContent = item.title;
+      meta.textContent = `${item.date} · ${item.categoryLabel || item.tags[0] || '文章'}`;
+      arrow.className = 'header-search__result-arrow';
+      arrow.setAttribute('aria-hidden', 'true');
+      arrow.textContent = '↗';
+      body.append(title, meta);
+      link.append(serial, body, arrow);
+      row.append(link);
+      searchResults.append(row);
+    });
+  };
+
+  const rankSearchItem = (item: HeaderSearchItem, query: string, tokens: string[]) => {
+    const title = normalizeSearchText(item.title);
+    const taxonomy = normalizeSearchText([...item.tags, ...item.categories, item.categoryLabel].join(' '));
+    const summary = normalizeSearchText(item.summary);
+    const content = normalizeSearchText(item.content);
+    const searchable = `${title} ${taxonomy} ${summary} ${content}`;
+    if (!tokens.every((token) => searchable.includes(token))) return -1;
+
+    let score = 0;
+    if (title === query) score += 120;
+    else if (title.startsWith(query)) score += 90;
+    else if (title.includes(query)) score += 70;
+    if (taxonomy.includes(query)) score += 45;
+    if (summary.includes(query)) score += 24;
+    if (content.includes(query)) score += 10;
+    return score;
+  };
+
+  const renderSearchPreview = async () => {
+    if (!searchInput || !searchStatus) return;
+    const rawQuery = searchInput.value.trim();
+    const query = normalizeSearchText(rawQuery);
+    setFullSearchUrl(rawQuery);
+    if ([...query].length < 2) {
+      renderSearchResults([]);
+      searchStatus.textContent = rawQuery
+        ? '再输入一个字符即可快速预览'
+        : '输入至少 2 个字符 · 回车查看完整搜索';
+      return;
+    }
+
+    searchStatus.textContent = '正在匹配本地文章索引…';
+    try {
+      const items = await loadSearchIndex();
+      if (normalizeSearchText(searchInput.value.trim()) !== query) return;
+      const tokens = query.split(/\s+/).filter(Boolean);
+      const matches = items
+        .map((item) => ({ item, score: rankSearchItem(item, query, tokens) }))
+        .filter((match) => match.score >= 0)
+        .sort((a, b) => b.score - a.score || Date.parse(b.item.timestamp) - Date.parse(a.item.timestamp));
+      renderSearchResults(matches.slice(0, 5).map((match) => match.item));
+      searchStatus.textContent = matches.length > 0
+        ? `快速匹配到 ${matches.length} 篇文章${matches.length > 5 ? ' · 显示前 5 篇' : ''}`
+        : '暂未直接匹配 · 回车尝试完整搜索';
+    } catch {
+      renderSearchResults([]);
+      searchStatus.textContent = '快速预览暂不可用 · 回车仍可搜索';
+    }
+  };
+
+  const closeSearch = () => {
+    search?.classList.remove('is-open');
+    searchToggle?.setAttribute('aria-expanded', 'false');
+    searchPreview?.setAttribute('hidden', '');
+    if (searchInput) {
+      searchInput.tabIndex = -1;
+      searchInput.setAttribute('aria-expanded', 'false');
+    }
+  };
+
+  searchToggle?.addEventListener('click', () => {
+    const open = !search?.classList.contains('is-open');
+    search?.classList.toggle('is-open', open);
+    searchToggle.setAttribute('aria-expanded', String(open));
+    if (searchInput) {
+      searchInput.tabIndex = open ? 0 : -1;
+      searchInput.setAttribute('aria-expanded', String(open));
+      if (open) {
+        searchPreview?.removeAttribute('hidden');
+        searchInput.focus();
+        void renderSearchPreview();
+      } else {
+        searchPreview?.setAttribute('hidden', '');
+      }
+    }
+  });
+
+  searchInput?.addEventListener('input', () => void renderSearchPreview());
+  searchInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      search?.requestSubmit();
+    }
+  });
+
+  search?.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    const links = [...(searchResults?.querySelectorAll<HTMLAnchorElement>('a') ?? [])];
+    if (links.length === 0) return;
+    event.preventDefault();
+    const currentIndex = links.indexOf(document.activeElement as HTMLAnchorElement);
+    const nextIndex = event.key === 'ArrowDown'
+      ? (currentIndex + 1 + links.length) % links.length
+      : (currentIndex <= 0 ? links.length - 1 : currentIndex - 1);
+    links[nextIndex]?.focus();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && search?.classList.contains('is-open')) {
+      closeSearch();
+      searchToggle?.focus();
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (search && event.target instanceof Node && !search.contains(event.target)) closeSearch();
+  });
+</script>
+
+<style>
+  .site-header {
+    position: fixed;
+    z-index: 150;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3rem;
+    color: var(--text);
+    background: var(--header-bg);
+    border-bottom: 1px solid color-mix(in srgb, var(--text) 7%, transparent);
+    box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 2%);
+    backdrop-filter: blur(14px) saturate(135%);
+    transition: box-shadow 0.3s ease;
+  }
+
+  .header-wrapper {
+    width: 100%;
+    height: 3rem;
+    padding: 0 2rem 0 10vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+  }
+
+  .header-title {
+    min-width: 10%;
+    margin-right: 0.5rem;
+    overflow: hidden;
+    color: var(--text);
+    font-family: var(--font-serif);
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 3rem;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-menu {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    white-space: nowrap;
+  }
+
+  .menu-item,
+  .menu-icon {
+    position: relative;
+    margin: 0 0.5rem;
+    color: var(--text);
+    line-height: 3rem;
+    text-decoration: none;
+  }
+
+  .menu-item[aria-current="page"] {
+    color: var(--header-active);
+    font-weight: 900;
+  }
+
+  .menu-item::after {
+    position: absolute;
+    right: 50%;
+    bottom: 0.38rem;
+    left: 50%;
+    height: 1px;
+    content: "";
+    background: currentColor;
+    transition: right 0.2s ease, left 0.2s ease;
+  }
+
+  .menu-item:hover::after,
+  .menu-item[aria-current="page"]::after {
+    right: 0;
+    left: 0;
+  }
+
+  .menu-icon {
+    width: 1.25rem;
+    display: grid;
+    place-items: center;
+  }
+
+  .menu-icon:hover,
+  .menu-item:hover {
+    color: var(--link-hover);
+  }
+
+  .menu-delimiter {
+    width: 1px;
+    height: 1.15rem;
+    margin: 0 0.5rem;
+    background: var(--text);
+    opacity: 0.75;
+  }
+
+  .header-search {
+    position: relative;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    border-radius: 0.5rem;
+    background: transparent;
+    transition: background-color 0.3s ease;
+  }
+
+  .header-search__toggle {
+    width: 2.2rem;
+    height: 2.5rem;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .header-search input {
+    width: 0;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    color: var(--text);
+    background: transparent;
+    font-family: var(--font-serif);
+    font-size: 0.8rem;
+    opacity: 0;
+    transition: width 0.3s ease, padding 0.3s ease, opacity 0.2s ease;
+  }
+
+  .header-search.is-open {
+    background: var(--search-bg);
+  }
+
+  .header-search.is-open input {
+    width: min(17rem, 24vw);
+    padding: 0 0.75rem 0 0;
+    opacity: 1;
+  }
+
+  .header-search__preview {
+    position: absolute;
+    z-index: 4;
+    top: calc(100% + 0.25rem);
+    right: 0;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid var(--border-strong);
+    border-radius: 0.55rem;
+    background: color-mix(in srgb, var(--page-raised) 94%, transparent);
+    box-shadow: 0 1.2rem 3rem rgb(0 0 0 / 14%);
+    backdrop-filter: blur(18px) saturate(135%);
+    white-space: normal;
+  }
+
+  .header-search__preview[hidden] {
+    display: none;
+  }
+
+  .header-search__feedback {
+    min-height: 2.5rem;
+    padding: 0.65rem 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: 0.56rem;
+    line-height: 1.4;
+  }
+
+  .header-search__enter {
+    padding: 0;
+    flex: none;
+    border: 0;
+    color: var(--muted);
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .header-search__enter:hover,
+  .header-search__enter:focus-visible {
+    color: var(--accent);
+    outline: 0;
+  }
+
+  .header-search__enter kbd {
+    padding: 0.08rem 0.28rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 0.2rem;
+    background: var(--surface-soft);
+    box-shadow: inset 0 -1px 0 var(--border-strong);
+    color: var(--secondary);
+    font-family: var(--font-code);
+  }
+
+  .header-search__results {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .header-search__results:empty {
+    display: none;
+  }
+
+  .header-search__results :global(li + li) {
+    border-top: 1px solid var(--border);
+  }
+
+  .header-search__results :global(a) {
+    min-height: 3.7rem;
+    padding: 0.55rem 0.75rem;
+    display: grid;
+    grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--text);
+    text-decoration: none;
+    transition: background-color 0.16s ease, padding-inline 0.16s ease;
+  }
+
+  .header-search__results :global(a:hover),
+  .header-search__results :global(a:focus-visible) {
+    padding-inline: 0.95rem 0.65rem;
+    outline: 0;
+    background: var(--surface-soft);
+  }
+
+  .header-search__results :global(.header-search__serial) {
+    color: var(--accent);
+    font-family: var(--font-code);
+    font-size: 0.54rem;
+  }
+
+  .header-search__results :global(.header-search__result-body) {
+    min-width: 0;
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .header-search__results :global(.header-search__result-body strong) {
+    overflow: hidden;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .header-search__results :global(.header-search__result-body small) {
+    overflow: hidden;
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: 0.51rem;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .header-search__results :global(.header-search__result-arrow) {
+    color: var(--accent);
+    font-family: var(--font-code);
+    font-size: 0.72rem;
+  }
+
+  .header-search__all {
+    min-height: 2.65rem;
+    padding: 0.6rem 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    color: var(--secondary);
+    font-size: 0.68rem;
+    text-decoration: none;
+  }
+
+  .header-search__all:hover,
+  .header-search__all:focus-visible {
+    color: var(--accent);
+    outline: 0;
+    background: var(--surface-soft);
+  }
+
+  .mobile-menu {
+    display: none;
+  }
+
+  @media (max-width: 60rem) {
+    .header-wrapper {
+      padding: 0 1rem;
+    }
+
+    .header-title {
+      min-width: max-content;
+      overflow: visible;
+    }
+
+    .desktop-menu {
+      display: none;
+    }
+
+    .mobile-menu {
+      position: static;
+      flex: none;
+      display: block;
+    }
+
+    .mobile-menu > summary {
+      width: 2rem;
+      height: 3rem;
+      display: grid;
+      place-content: center;
+      gap: 0.34rem;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .mobile-menu > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .mobile-menu > summary span {
+      width: 1.5rem;
+      height: 2px;
+      display: block;
+      border-radius: 3px;
+      background: currentColor;
+      transition: transform 0.3s ease, opacity 0.2s ease;
+    }
+
+    .mobile-menu[open] > summary span:nth-child(1) { transform: translateY(0.5rem) rotate(45deg); }
+    .mobile-menu[open] > summary span:nth-child(2) { opacity: 0; }
+    .mobile-menu[open] > summary span:nth-child(3) { transform: translateY(-0.5rem) rotate(-45deg); }
+
+    .mobile-menu__panel {
+      position: fixed;
+      z-index: 149;
+      top: 3rem;
+      right: 0;
+      left: 0;
+      padding: 0.5rem 1rem 0.8rem;
+      border-top: 2px solid var(--border);
+      background: var(--mobile-menu-bg);
+      box-shadow: 0 0.125rem 0.25rem rgb(0 0 0 / 10%);
+    }
+
+    .mobile-menu__panel form {
+      height: 2.5rem;
+      padding: 0 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-radius: 0.45rem;
+      color: var(--secondary);
+      background: var(--search-bg);
+    }
+
+    .mobile-menu__panel input {
+      min-width: 0;
+      flex: 1;
+      border: 0;
+      outline: 0;
+      color: var(--text);
+      background: transparent;
+      font-family: var(--font-serif);
+    }
+
+    .mobile-menu__panel nav {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 0.45rem;
+    }
+
+    .mobile-menu__panel nav a {
+      padding: 0.45rem;
+      color: var(--text);
+      font-size: 1rem;
+      line-height: 1.5rem;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .mobile-menu__panel nav a[aria-current="page"] {
+      font-weight: 900;
+    }
+
+    .mobile-menu__theme {
+      padding: 0.45rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border-top: 1px solid var(--border);
+      color: var(--secondary);
+      font-size: 0.8rem;
+    }
+  }
+</style>

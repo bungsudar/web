@@ -1,0 +1,270 @@
+---
+import Icon from '../../components/Icon.astro';
+import PageHero from '../../components/PageHero.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="搜索" description="搜索 zu1k 博客的标题、正文、分类与标签。" noindex={true}>
+  <div class="wide-page search-page">
+    <PageHero
+      eyebrow="FULL TEXT / LOCAL INDEX"
+      title="搜索"
+      description="标题、正文、分类和标签都在本地浏览器中完成匹配。输入一个概念、一项技术，或者记忆中的半句话。"
+      mark="?"
+      compact
+    >
+      <div slot="aside">无需上传搜索内容<br />索引覆盖全部公开文章</div>
+    </PageHero>
+
+    <section class="search-workspace" aria-labelledby="search-workspace-title">
+      <h2 id="search-workspace-title" class="visually-hidden">全文搜索</h2>
+      <form class="search-box" role="search" data-search-form>
+        <label class="visually-hidden" for="search-input">搜索全部文章</label>
+        <Icon name="search" size={23} />
+        <input
+          id="search-input"
+          name="q"
+          type="search"
+          placeholder="搜索技术、概念或一句话…"
+          autocomplete="off"
+          autofocus
+          data-search-input
+        />
+        <kbd>ESC</kbd>
+      </form>
+
+      <div class="search-status" data-search-status aria-live="polite">正在准备索引…</div>
+      <ol class="search-results" data-search-results></ol>
+      <noscript><p>全文搜索需要 JavaScript。你仍然可以从<a href="/posts/">文章归档</a>浏览。</p></noscript>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  import Fuse from 'fuse.js';
+
+  type SearchItem = {
+    title: string;
+    url: string;
+    date: string;
+    summary: string;
+    content: string;
+    tags: string[];
+    categories: string[];
+    categoryLabel: string;
+    readingTime: number;
+  };
+
+  const form = document.querySelector<HTMLFormElement>('[data-search-form]');
+  const input = document.querySelector<HTMLInputElement>('[data-search-input]');
+  const status = document.querySelector<HTMLElement>('[data-search-status]');
+  const results = document.querySelector<HTMLOListElement>('[data-search-results]');
+  const response = await fetch('/search-index.json');
+  const items: SearchItem[] = await response.json();
+  const fuse = new Fuse(items, {
+    includeScore: true,
+    ignoreLocation: true,
+    minMatchCharLength: 2,
+    threshold: 0.34,
+    keys: [
+      { name: 'title', weight: 0.42 },
+      { name: 'tags', weight: 0.2 },
+      { name: 'categories', weight: 0.14 },
+      { name: 'summary', weight: 0.14 },
+      { name: 'content', weight: 0.1 },
+    ],
+  });
+
+  const addText = (element: HTMLElement, value: string) => {
+    element.textContent = value;
+    return element;
+  };
+
+  const render = (query: string) => {
+    if (!results || !status) return;
+    results.replaceChildren();
+    const normalized = query.trim();
+    if (normalized.length < 2) {
+      status.textContent = `索引已就绪：${items.length} 篇公开文章。请输入至少 2 个字符。`;
+      return;
+    }
+
+    const matches = fuse.search(normalized, { limit: 24 });
+    status.textContent = matches.length > 0
+      ? `“${normalized}” · ${matches.length} 个相关结果`
+      : '没有找到相关文章，试试更短或更具体的关键词。';
+
+    matches.forEach(({ item }, index) => {
+      const row = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = item.url;
+      const serial = addText(document.createElement('span'), String(index + 1).padStart(2, '0'));
+      serial.className = 'result-serial';
+      const body = document.createElement('span');
+      body.className = 'result-body';
+      const title = addText(document.createElement('strong'), item.title);
+      const summary = addText(document.createElement('small'), item.summary);
+      body.append(title, summary);
+      const meta = addText(
+        document.createElement('span'),
+        `${item.date}  /  ${item.readingTime} MIN  /  ${item.categoryLabel || item.tags[0] || '文章'}`,
+      );
+      meta.className = 'result-meta';
+      const arrow = addText(document.createElement('span'), '↗');
+      arrow.className = 'result-arrow';
+      link.append(serial, body, meta, arrow);
+      row.append(link);
+      results.append(row);
+    });
+  };
+
+  const params = new URLSearchParams(location.search);
+  const initial = params.get('q') ?? '';
+  if (input) input.value = initial;
+  render(initial);
+
+  form?.addEventListener('submit', (event) => event.preventDefault());
+  input?.addEventListener('input', () => {
+    const query = input.value;
+    const url = new URL(location.href);
+    query ? url.searchParams.set('q', query) : url.searchParams.delete('q');
+    history.replaceState({}, '', url);
+    render(query);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && input) {
+      input.value = '';
+      input.focus();
+      render('');
+    }
+  });
+</script>
+
+<style>
+  .search-workspace {
+    padding: clamp(3.5rem, 7vw, 5.5rem) clamp(0rem, 3vw, 2rem) 0;
+  }
+
+  .search-box {
+    min-height: clamp(4.5rem, 9vw, 7rem);
+    padding: 0 clamp(0.8rem, 2vw, 1.4rem);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.85rem;
+    border-block: 1px solid var(--border-strong);
+    color: var(--muted);
+  }
+
+  .search-box:focus-within {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .search-box input {
+    min-width: 0;
+    padding: 1rem 0;
+    border: 0;
+    outline: 0;
+    color: var(--text);
+    background: transparent;
+    font-family: var(--font-serif);
+    font-size: clamp(1.35rem, 3vw, 2.25rem);
+  }
+
+  .search-box input::placeholder { color: var(--muted); }
+
+  .search-box kbd {
+    padding: 0.12rem 0.35rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 0.2rem;
+    background: var(--surface-soft);
+    box-shadow: inset 0 -1px 0 var(--border-strong);
+    font-family: var(--font-code);
+    font-size: 0.58rem;
+  }
+
+  .search-status {
+    min-height: 3rem;
+    padding: 0.85rem 0.25rem;
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: 0.6rem;
+  }
+
+  .search-results {
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border-strong);
+    list-style: none;
+  }
+
+  .search-results :global(a) {
+    min-height: 6.3rem;
+    padding: 1rem 0.35rem;
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    transition: background-color 0.18s ease, padding-inline 0.18s ease;
+  }
+
+  .search-results :global(a:hover) {
+    padding-inline: 0.75rem;
+    background: var(--surface-soft);
+  }
+
+  .search-results :global(.result-serial),
+  .search-results :global(.result-meta) {
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: 0.56rem;
+  }
+
+  .search-results :global(.result-serial),
+  .search-results :global(.result-arrow) { color: var(--accent); }
+
+  .search-results :global(.result-body) {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .search-results :global(.result-body strong) {
+    font-size: 1.08rem;
+    line-height: 1.35;
+  }
+
+  .search-results :global(.result-body small) {
+    margin-top: 0.3rem;
+    overflow: hidden;
+    color: var(--secondary);
+    font-size: 0.7rem;
+    line-height: 1.5;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .search-results :global(.result-arrow) {
+    font-family: var(--font-code);
+    opacity: 0;
+    transform: translateX(-0.25rem);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+
+  .search-results :global(a:hover .result-arrow) {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  @media (max-width: 48rem) {
+    .search-workspace { padding-top: 3.2rem; }
+    .search-box { min-height: 4rem; }
+    .search-box input { font-size: 1.2rem; }
+    .search-results :global(a) { grid-template-columns: 1.5rem minmax(0, 1fr) auto; gap: 0.65rem; }
+    .search-results :global(.result-meta) { grid-column: 2; }
+    .search-results :global(.result-arrow) { grid-row: 1 / span 2; grid-column: 3; }
+  }
+</style>

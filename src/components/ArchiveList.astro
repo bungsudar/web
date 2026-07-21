@@ -1,0 +1,192 @@
+---
+import type { PostEntry } from '../lib/content';
+import PageHero from './PageHero.astro';
+import PostCard from './PostCard.astro';
+
+export interface Props {
+  posts: PostEntry[];
+  title: string;
+  description?: string;
+  eyebrow?: string;
+  totalCount?: number;
+  page?: number;
+  totalPages?: number;
+  paginationBase?: string;
+}
+
+const {
+  posts,
+  title,
+  description = `${posts.length} 篇文章，按时间倒序排列。`,
+  eyebrow = 'WRITING / ARCHIVE',
+  totalCount = posts.length,
+  page = 1,
+  totalPages = 1,
+  paginationBase = '/posts/',
+} = Astro.props;
+
+const grouped = posts.reduce((years, post) => {
+  const year = post.data.date.getFullYear();
+  const entries = years.get(year) ?? [];
+  entries.push(post);
+  years.set(year, entries);
+  return years;
+}, new Map<number, PostEntry[]>());
+
+const postIndexes = new Map(posts.map((post, index) => [post.id, index + 1 + (page - 1) * 20]));
+const pageUrl = (value: number) => value === 1 ? paginationBase : `${paginationBase}page/${value}/`;
+---
+
+<section class="archive-page" aria-labelledby="archive-title">
+  <PageHero eyebrow={eyebrow} title={title} description={description} mark={totalCount} compact>
+    <div slot="aside">
+      <strong>{totalCount}</strong> 篇公开文章<br />
+      {totalPages > 1 ? `第 ${page} / ${totalPages} 页` : '完整时间索引'}
+    </div>
+  </PageHero>
+
+  <div class="archive-ledger">
+    {[...grouped.entries()].map(([year, yearPosts]) => (
+      <section class="archive-year" aria-labelledby={`year-${year}`}>
+        <header>
+          <h2 id={`year-${year}`}>{year}</h2>
+          <span>{String(yearPosts.length).padStart(2, '0')} POSTS</span>
+        </header>
+        <div class="archive-year__entries">
+          {yearPosts.map((post) => <PostCard post={post} index={postIndexes.get(post.id)} />)}
+        </div>
+      </section>
+    ))}
+  </div>
+
+  {totalPages > 1 && (
+    <nav class="pagination" aria-label="分页" data-no-select>
+      <span>PAGE</span>
+      {Array.from({ length: totalPages }, (_, index) => index + 1).map((value) => (
+        <a href={pageUrl(value)} aria-current={value === page ? 'page' : undefined}>{String(value).padStart(2, '0')}</a>
+      ))}
+    </nav>
+  )}
+</section>
+
+<style>
+  .archive-page {
+    width: min(calc(100% - 2rem), 68rem);
+    margin: 0 auto;
+    padding: 3rem 0 5rem;
+  }
+
+  .archive-page :global(.page-hero__aside strong) {
+    color: var(--text);
+    font-family: var(--font-code);
+    font-size: 1.45rem;
+  }
+
+  .archive-ledger {
+    padding: clamp(3.2rem, 7vw, 5.5rem) clamp(0.25rem, 3vw, 2rem) 0;
+  }
+
+  .archive-year {
+    display: grid;
+    grid-template-columns: 8rem minmax(0, 1fr);
+    gap: clamp(1.5rem, 5vw, 4rem);
+  }
+
+  .archive-year + .archive-year {
+    margin-top: 3rem;
+  }
+
+  .archive-year > header {
+    position: sticky;
+    top: 5rem;
+    height: max-content;
+    padding-top: 0.55rem;
+  }
+
+  .archive-year h2 {
+    margin: 0;
+    font-family: var(--font-code);
+    font-size: 1.65rem;
+    font-weight: 500;
+    letter-spacing: -0.04em;
+  }
+
+  .archive-year header span {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+  }
+
+  .archive-year__entries {
+    border-top: 1px solid var(--border-strong);
+  }
+
+  .pagination {
+    margin-top: 4rem;
+    padding-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .pagination > span {
+    margin-right: 0.5rem;
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+  }
+
+  .pagination a {
+    min-width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+    color: var(--secondary);
+    font-family: var(--font-code);
+    font-size: 0.65rem;
+  }
+
+  .pagination a:hover {
+    border-color: var(--border-strong);
+    color: var(--accent);
+  }
+
+  .pagination a[aria-current="page"] {
+    color: var(--page-bg);
+    background: var(--text);
+  }
+
+  @media (max-width: 48rem) {
+    .archive-page {
+      width: min(calc(100% - 1.25rem), 68rem);
+    }
+
+    .archive-ledger {
+      padding-top: 3.2rem;
+    }
+
+    .archive-year {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    .archive-year > header {
+      position: static;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .archive-year h2 {
+      font-size: 1.4rem;
+    }
+  }
+</style>
