@@ -14,11 +14,11 @@ const isCurrent = (href: string) => href === '/' ? normalizedPath === '/' : norm
 
 <header class="site-header">
   <div class="header-wrapper">
-    <a class="header-title" href="/" aria-label={`${SITE.title} 首页`}>{SITE.title}</a>
+    <a class="header-title" href="/" aria-label={`${SITE.title} 首页`} data-astro-prefetch="hover">{SITE.title}</a>
 
     <nav class="desktop-menu" aria-label="主导航">
       {NAV.map((item) => (
-        <a class="menu-item" href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+        <a class="menu-item" href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined} data-astro-prefetch="hover">
           {item.label}
         </a>
       ))}
@@ -47,7 +47,7 @@ const isCurrent = (href: string) => href === '/' ? normalizedPath === '/' : norm
             <button type="submit" class="header-search__enter"><kbd>↵</kbd> 查看全部</button>
           </div>
           <ol id="header-search-results" class="header-search__results" data-header-search-results></ol>
-          <a class="header-search__all" href="/search/" data-header-search-all>
+          <a class="header-search__all" href="/search/" data-header-search-all data-astro-prefetch="hover">
             <span>打开完整搜索</span><span aria-hidden="true">→</span>
           </a>
         </div>
@@ -64,7 +64,7 @@ const isCurrent = (href: string) => href === '/' ? normalizedPath === '/' : norm
         </form>
         <nav aria-label="移动端主导航">
           {NAV.map((item) => (
-            <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>{item.label}</a>
+            <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined} data-astro-prefetch="tap">{item.label}</a>
           ))}
           <a href="/rss.xml">RSS</a>
           <a href="https://github.com/zu1k" rel="me noopener">GitHub</a>

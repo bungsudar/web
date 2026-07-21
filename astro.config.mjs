@@ -33,6 +33,6 @@ export default defineConfig({
   },
   prefetch: {
     prefetchAll: false,
-    defaultStrategy: 'viewport',
+    defaultStrategy: 'hover',
   },
 });

@@ -52,7 +52,7 @@ const image = imageModule?.default;
         <span>{index ? String(index).padStart(2, '0') : 'NEW'}</span>
         {dateText && <time datetime={isoDate}>{dateText}</time>}
       </div>
-      <h2><a href={href}>{data.title}</a></h2>
+      <h2><a href={href} data-astro-prefetch="hover">{data.title}</a></h2>
       <div class="post-summary__meta">
         {categories[0] && (
           <a href={getTaxonomyUrl('categories', categories[0])}>
@@ -63,7 +63,7 @@ const image = imageModule?.default;
       </div>
       {description && <p>{description}</p>}
       <footer>
-        <a class="read-more" href={href}>阅读全文 <Icon name="arrow" size={15} /></a>
+        <a class="read-more" href={href} data-astro-prefetch="hover">阅读全文 <Icon name="arrow" size={15} /></a>
         {tags.length > 0 && (
           <div class="post-summary__tags" aria-label="标签">
             {tags.slice(0, 3).map((tag) => <a href={getTaxonomyUrl('tags', tag)}>#{getTaxonomyLabel('tags', tag)}</a>)}
@@ -72,7 +72,7 @@ const image = imageModule?.default;
       </footer>
     </div>
     {image?.src && (
-      <a class="post-summary__image" href={href} tabindex="-1" aria-hidden="true">
+      <a class="post-summary__image" href={href} tabindex="-1" aria-hidden="true" data-astro-prefetch="hover">
         <img src={image.src} width={image.width} height={image.height} alt="" loading="lazy" />
       </a>
     )}
@@ -81,7 +81,7 @@ const image = imageModule?.default;
   <article class="archive-entry">
     <span class="archive-entry__index" data-no-select>{String(index ?? 0).padStart(2, '0')}</span>
     {shortDate && <time datetime={isoDate}>{shortDate}</time>}
-    <a href={href}>{data.title}</a>
+    <a href={href} data-astro-prefetch="hover">{data.title}</a>
     <span class="archive-entry__arrow" aria-hidden="true">↗</span>
   </article>
 )}
