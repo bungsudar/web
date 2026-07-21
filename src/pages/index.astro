@@ -314,26 +314,57 @@ const categoryCount = getCategories(posts).length;
   }
 
   @media (max-width: 48rem) {
-    .modern-home { width: min(calc(100% - 1.25rem), 72rem); }
+    .modern-home {
+      width: min(calc(100% - 1.25rem), 72rem);
+      padding-top: 0;
+    }
 
     .home-hero {
       min-height: auto;
-      padding: 4.5rem 0.65rem 2.4rem;
+      padding: 3.75rem 0.65rem 2.4rem;
       grid-template-columns: 1fr;
       grid-template-rows: auto;
-      gap: 2.2rem;
+      gap: 2.5rem;
     }
 
-    .home-hero h1 span { font-size: clamp(4.2rem, 23vw, 6rem); }
-    .home-hero h1 em { font-size: clamp(1.65rem, 8.5vw, 2.5rem); }
-    .home-portrait { grid-row: 1; justify-self: end; margin: 0.5rem 1.2rem -7rem 0; opacity: 0.18; }
-    .home-portrait a { width: 9rem; }
+    .home-kicker {
+      max-width: calc(100% - 5.75rem);
+      margin-bottom: 0.85rem;
+    }
+
+    .home-hero h1 span { font-size: clamp(4rem, 21vw, 5.5rem); }
+    .home-hero h1 em {
+      max-width: 16ch;
+      font-size: clamp(1.6rem, 7.8vw, 2.25rem);
+    }
+
+    .home-portrait {
+      position: absolute;
+      z-index: 2;
+      top: 3.25rem;
+      right: 0.75rem;
+      margin: 0;
+      opacity: 1;
+    }
+
+    .home-portrait::before {
+      inset: -24%;
+      opacity: 0.55;
+    }
+
+    .home-portrait a { width: 4.6rem; }
+
+    .home-portrait img {
+      border-width: 0.25rem;
+      box-shadow: 0 0.8rem 2rem rgb(0 0 0 / 10%);
+    }
+
     .home-portrait span { display: none; }
     .home-hero__copy { position: relative; z-index: 1; }
     .home-stats { grid-column: auto; }
     .home-stats div { padding-inline: 0.55rem; display: block; }
     .home-stats dd { margin-top: 0.25rem; font-size: 1.35rem; }
-    .latest-writing { padding-top: 4rem; }
+    .latest-writing { padding-top: 3.5rem; }
     .latest-writing > header { align-items: flex-start; flex-direction: column; }
   }
 </style>
