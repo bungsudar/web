@@ -9,7 +9,7 @@ const latestPosts = posts.slice(0, 3);
 const categoryCount = getCategories(posts).length;
 ---
 
-<BaseLayout title="zu1k">
+<BaseLayout title="home">
   <Fragment slot="head">
     <link rel="preload" href="/images/logo.jpg" as="image" fetchpriority="high" />
   </Fragment>
@@ -40,9 +40,9 @@ const categoryCount = getCategories(posts).length;
       </div>
 
       <dl class="home-stats" aria-label="博客概览" data-no-select>
-        <div><dt>文章</dt><dd>{posts.length}</dd></div>
-        <div><dt>主题</dt><dd>{categoryCount}</dd></div>
-        <div><dt>写作</dt><dd>9<small>年</small></dd></div>
+        <div><dt>artikel</dt><dd>{posts.length}</dd></div>
+        <div><dt>kategori</dt><dd>{categoryCount}</dd></div>
+        <div><dt>menulis</dt><dd>9<small>tahun</small></dd></div>
       </dl>
     </section>
 
