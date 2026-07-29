@@ -9,11 +9,11 @@ const posts = allPosts.slice(0, PAGE_SIZE);
 const totalPages = Math.ceil(allPosts.length / PAGE_SIZE);
 ---
 
-<BaseLayout title="所有文章" description={`zu1k 的 ${allPosts.length} 篇公开文章归档。`}>
+<BaseLayout title="Blog" description={`Catatan Harian Sudar Blogger ${allPosts.length}`}>
   <ArchiveList
     posts={posts}
-    title="所有文章"
-    description={`从最近一次排查，到更早的技术实验与生活片段。这里是 ${allPosts.length} 篇文章的时间索引。`}
+    title="Catatan Harian"
+    description={`Ini adalah beberapa catatan harian sudar blogger,  cerita tentang kehidupan, pengalaman dan review. Berikut adalah garis waktu dari ${allPosts.length} artikel. `}
     totalCount={allPosts.length}
     page={1}
     totalPages={totalPages}
