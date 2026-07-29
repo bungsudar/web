@@ -1,11 +1,11 @@
 export const SITE = {
-  title: 'zu1k',
+  title: 'Sudar Blogger',
   description: 'A boy dreaming of traveling around the world. Notes on security, systems, code and life.',
   url: 'https://zu1k.com',
-  author: 'zu1k',
+  author: 'Masdar',
   email: 'i@zu1k.com',
   locale: 'zh-CN',
-  timezone: 'Asia/Shanghai',
+  timezone: 'Asia/Jakarta',
   since: 2017,
 } as const;
 
@@ -17,10 +17,10 @@ export const SOCIALS = [
 ] as const;
 
 export const NAV = [
-  { label: '文章', href: '/posts/' },
-  { label: '分类', href: '/categories/' },
-  { label: '标签', href: '/tags/' },
-  { label: '项目', href: '/projects/' },
-  { label: '友链', href: '/links/' },
-  { label: '关于', href: '/about/' },
+  { label: 'Blog', href: '/posts/' },
+  { label: 'Topik', href: '/categories/' },
+  { label: 'Tag', href: '/tags/' },
+  { label: 'Project', href: '/projects/' },
+  { label: 'Teman', href: '/links/' },
+  { label: 'About', href: '/about/' },
 ] as const;
