@@ -16,7 +16,7 @@ categories:
 Sudah lama ingin Malang dari dulu karena di Malang juga banyak sekali tempat wisata mulai dari alam dan wisata buatan tentu nya yang instagramable
 
 Malang dari lamongan sendiri terbilang sangat jauh juga sekitar 2 jam 30 menit kalau pakai motor, ditambah perjalanan ke malang jalan nya juga berkelok - kelok jadi untuk kesana motor juga harus keadaan baik. 
-![malang skyland](skyland1.jpg)
+![malang skyland](skyland.jpg)
 Kalau mau ke malang juga bingung mau milih wisata yang mana karena malang itu banyak sekli tempat wisata nya bahkan hampir berdekatan pula wisatanya satu sama lain
 
 Akhir nya saya memilih untuk pergi ke Malang dan mencoba ke Malang Skyland ini. 
@@ -44,7 +44,7 @@ Salah satu spot untuk menikmati view 360 derajat di Malang Skyland adalah Sky Br
 Untuk menikmati keindahan pemandangan dan Sky Bridge, kamu harus membayar tiket sebesar Rp18.000 per orang. Nantinya, kamu harus mengenakan alas kaki khusus sebelum masuk area Sky Bridge. 
 
 Di malang skyland ini juga ada ATV dan Seccoter, apabila kalian capek berkeliling bisa naik ini dengan membayar 50.000 untuk ATV nya dan Seccoter membayar 25.000 saja.
-![malang skyland](skyland5.jpg)
+![malang skyland](skyland1.jpg)
 Mungkin kalian ingin mencoba VR di Malang Skyland ini anda bisa mencoba nya dengan membayar 35.000 saja. 
 
 Disini juga di sediakan Playground yang mana buat kalian kesana dengan anak bisa mencobanya cukup membayar 16.800 rupiah saja
