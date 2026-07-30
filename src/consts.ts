@@ -1,12 +1,12 @@
 export const SITE = {
-  title: 'Sudar Blogger',
+  title: 'Masdaar',
   description: 'A boy dreaming of traveling around the world. Notes on security, systems, code and life.',
   url: 'https://zu1k.com',
   author: 'Masdar',
-  email: 'i@zu1k.com',
+  email: 'admin@sudarblogger.com',
   locale: 'zh-CN',
   timezone: 'Asia/Jakarta',
-  since: 2017,
+  since: 2020,
 } as const;
 
 export const SOCIALS = [
