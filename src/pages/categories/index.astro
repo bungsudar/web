@@ -8,19 +8,19 @@ const posts = await getPublishedPosts();
 const categories = getCategories(posts, 'count');
 ---
 
-<BaseLayout title="所有分类" description="按领域浏览 zu1k 的文章。">
+<BaseLayout title="Kategori" description="Artikel Yang di Kategorikan">
   <div class="wide-page categories-page">
     <PageHero
       eyebrow="TOPICS / COLLECTIONS"
-      title="所有分类"
-      description="把长期写作整理成一组可进入的主题书架。从编程与安全，到生活、经验和对当下的思考。"
+      title="Collection"
+      description="Mengatur tulisan-tulisan jangka panjang saya ke dalam rak buku tematik yang mudah diakses. Mulai dari pemrograman dan keamanan hingga kehidupan, pengalaman, dan refleksi tentang masa kini."
       mark={categories.length}
       compact
     >
-      <div slot="aside"><strong>{posts.length}</strong> 篇文章<br /><strong>{categories.length}</strong> 个持续主题</div>
+      <div slot="aside"><strong>{posts.length}</strong> catatan<br /><strong>{categories.length}</strong> Harian</div>
     </PageHero>
 
-    <section class="category-library" aria-label="全部分类">
+    <section class="category-library" aria-label="Ketegori">
       {categories.map((term, index) => {
         const categoryPosts = filterPostsByTaxonomy(posts, 'categories', term.value);
         return (
