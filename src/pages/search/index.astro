@@ -4,28 +4,28 @@ import PageHero from '../../components/PageHero.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="搜索" description="搜索 zu1k 博客的标题、正文、分类与标签。" noindex={true}>
+<BaseLayout title="Search" description="Kepoin Blog Ini Sepuasnya" noindex={true}>
   <div class="wide-page search-page">
     <PageHero
       eyebrow="FULL TEXT / LOCAL INDEX"
-      title="搜索"
-      description="标题、正文、分类和标签都在本地浏览器中完成匹配。输入一个概念、一项技术，或者记忆中的半句话。"
+      title="Search"
+      description="Penasaran Dengan Catatan Harian Kang Sudar?"
       mark="?"
       compact
     >
-      <div slot="aside">无需上传搜索内容<br />索引覆盖全部公开文章</div>
+      <div slot="aside">Yuk Kepoin<br />Blog ini</div>
     </PageHero>
 
     <section class="search-workspace" aria-labelledby="search-workspace-title">
-      <h2 id="search-workspace-title" class="visually-hidden">全文搜索</h2>
+      <h2 id="search-workspace-title" class="visually-hidden">Kepoin aja</h2>
       <form class="search-box" role="search" data-search-form>
-        <label class="visually-hidden" for="search-input">搜索全部文章</label>
+        <label class="visually-hidden" for="search-input">Penasaran banget</label>
         <Icon name="search" size={23} />
         <input
           id="search-input"
           name="q"
           type="search"
-          placeholder="搜索技术、概念或一句话…"
+          placeholder="Sedang Memuat..."
           autocomplete="off"
           autofocus
           data-search-input
