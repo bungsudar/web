@@ -11,7 +11,7 @@ tags:
 - Bromo
 - Semeru
 categories:
-- Travel
+- travel
 ---
 Dari tahun 2022 saya pribadi ingin sekali ke Gunung Bromo yang mana itu hanyalah wacana, alasan karena ingin kesana karena ingin melihat keindahan gunung bromo dari dekat dan ingin merasakan betapa dingin nya di gunung bromo ini. 
 ![bromo semeru](/img/travis/IMG_20240929_081017_NR.jpg)
