@@ -1,5 +1,5 @@
 export const SITE = {
-  title: 'Masdaar',
+  title: 'masdar',
   description: 'A boy dreaming of traveling around the world. Notes on security, systems, code and life.',
   url: 'https://zu1k.com',
   author: 'Masdar',
