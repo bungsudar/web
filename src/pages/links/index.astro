@@ -8,12 +8,12 @@ import { siteIdentity } from '../../data/identity';
 const siteExchangeInfo = `NAME: ${siteIdentity.name}\nBIO: ${siteIdentity.description}\nURL: ${siteIdentity.url}\nLOGO: ${siteIdentity.logo}`;
 ---
 
-<BaseLayout title="友情链接" description="友情链接，欢迎与我交换友链。">
+<BaseLayout title="Teman" description="Tetangga Sebelah Yang Hobi Ngeblog">
   <div class="wide-page links-page">
     <PageHero
       eyebrow="PEERS / OPEN WEB"
-      title="友邻网站"
-      description="独立网站让互联网保留了人的气味。这些是我在开放网络里遇见，并愿意反复拜访的朋友与同行者。"
+      title="Tetangga Sebelah"
+      description="Beberapa Tetangga Sebelah Yang Memiliki Hobi Yang Sama Yaitu Menulis Artikel di Blog"
       mark={friends.length}
       compact
     >
@@ -33,7 +33,7 @@ const siteExchangeInfo = `NAME: ${siteIdentity.name}\nBIO: ${siteIdentity.descri
       <header>
         <div>
           <p>PEOPLE BEHIND THE LINKS</p>
-          <h2 id="friend-directory-title">网络同行者</h2>
+          <h2 id="friend-directory-title">Media Patner</h2>
         </div>
         <span>{String(friends.length).padStart(2, '0')} FRIENDS</span>
       </header>
@@ -55,11 +55,11 @@ const siteExchangeInfo = `NAME: ${siteIdentity.name}\nBIO: ${siteIdentity.descri
     </section>
 
     <section class="exchange-note" aria-labelledby="exchange-title">
-      <p>EXCHANGE / 交换友链</p>
-      <h2 id="exchange-title">也欢迎你来敲门。</h2>
+      <p>EXCHANGE / Link Tautan</p>
+      <h2 id="exchange-title">Mau Kirim Link?</h2>
       <div>
-        <p>如果你也在认真维护自己的独立网站，可以通过邮件发送网站名称、简介、地址与头像。</p>
-        <a href="mailto:i@zu1k.com">i@zu1k.com <span aria-hidden="true">↗</span></a>
+        <p>Kalian Yang Ingin Blog nya Menjadi Patner Sudar Blogger bisa kirim link nya ke email ini dan ikuti langkah - langkahnya.</p>
+        <a href="mailto:admin@sudarblogger.com">admin@sudarblogger.com <span aria-hidden="true">↗</span></a>
       </div>
     </section>
   </div>
