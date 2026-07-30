@@ -1,6 +1,6 @@
 ---
 slug: "travel/penanggungan-mojokerto"
-title: Pengalaman Pertama kali Naik Gunung Penanggungan Mojokerto
+title: Pengalaman Pertama kali Naik Gunung Penanggungan Mojokerto Modal Nekat
 tags:
 - Penanggungan
 - Mojokerto
@@ -22,7 +22,9 @@ Sampai disana saya dan teman toriq malakukan registrasi secara online, dimana re
 Dalam proses registrasi ini saya kenal pendaki lain dari dari sidoarjo akan tetapi lupa namanya yaitu mendaki dengan dengan dua orang, karena kita semua awam dalam mendaki jadi ada isiden kecil yang mana kami tersesat karena salah jalur, niat nya berangkat jam tiga pagi malah molor menjadi jam 6 pagi baru mulai naik ke atas. 
 
 Insiden tersebut karena kami semua melewati jalan yang sudah di garis merah akan tetapi tetap kami trabas jadi nya nyasar entah kemana, syukur nya tim sar bisa menemukan kami dan bisa kembali di pos awal. 
+
 ![Penanggungan Mojokerto](penanggungan3.jpg) 
+
 Sedikit ilmu untuk kami kalau ada garis merah jangan di lewati biasa nya kalau di gunung di tandai dengan rapia merah, itu kata tim sar yang ada disana. 
 
 Setelah turun, kami dikasih tau banyak hal tentang mendaki, biar tidak tersesat lagi, karena masih pagi kami semua melanjutkan perjalanan ke puncak tanpa istirahat sedikit pun. 
