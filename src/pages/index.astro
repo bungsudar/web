@@ -39,7 +39,7 @@ const categoryCount = getCategories(posts).length;
         </a>
       </div>
 
-      <dl class="home-stats" aria-label="博客概览" data-no-select>
+      <dl class="home-stats" aria-label="Statistic" data-no-select>
         <div><dt>artikel</dt><dd>{posts.length}</dd></div>
         <div><dt>kategori</dt><dd>{categoryCount}</dd></div>
         <div><dt>menulis</dt><dd>9<small>tahun</small></dd></div>
@@ -52,7 +52,7 @@ const categoryCount = getCategories(posts).length;
           <p class="home-kicker" data-no-select>LATEST WRITING</p>
           <h2 id="latest-title">Catatan Harian</h2>
         </div>
-        <a href="/posts/" data-no-select data-astro-prefetch="hover">全部 {posts.length} 篇 <Icon name="arrow" size={16} /></a>
+        <a href="/posts/" data-no-select data-astro-prefetch="hover">Semua {posts.length} Atikel <Icon name="arrow" size={16} /></a>
       </header>
       <div class="latest-writing__list">
         {latestPosts.map((post, index) => <PostCard post={post} variant="summary" index={index + 1} />)}
