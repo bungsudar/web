@@ -19,7 +19,7 @@ Tidak hanya lamongan saja yang berangkat ke madiun untuk menghadiri acara terseb
 
 ## Madiun Cakkk! Deklarasi Pemilu Damai & Temu Kandang PSHT Jawa Timur 2023
 
-![Madiun](madiun2.jpg)
+![Madiun](madiun.jpg)
 
 Ada sekirtar 20 ribu warga yang datang dalam acara tersebut, bahkan PSHT asal jember menggunakan armada bus yang jumlah nya sekitar 33 bus serta 2000 warga yang datang ke acara Temu Kandang ini. 
 
